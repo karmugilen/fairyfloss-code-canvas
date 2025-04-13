@@ -8,14 +8,14 @@ const Index = () => {
       {/* Header/Navigation */}
       <header className="p-6">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="text-white opacity-70">
+          <div className="text-white opacity-70 animate-pulse-slow">
             <span className="text-2xl">✧</span>
           </div>
           <nav>
             <ul className="flex space-x-8 text-white/80">
-              <li><a href="#about" className="hover:text-primary transition-colors">about</a></li>
-              <li><a href="#projects" className="hover:text-primary transition-colors">projects</a></li>
-              <li><a href="#contact" className="hover:text-primary transition-colors">contact</a></li>
+              <li><a href="#about" className="hover:text-primary transition-colors nav-link">about</a></li>
+              <li><a href="#projects" className="hover:text-primary transition-colors nav-link">projects</a></li>
+              <li><a href="#contact" className="hover:text-primary transition-colors nav-link">contact</a></li>
             </ul>
           </nav>
         </div>
@@ -24,11 +24,11 @@ const Index = () => {
       {/* Hero Section */}
       <section id="hero" className="min-h-[70vh] flex items-center">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div>
+          <div className="animate-fade-in">
             <div className="code-block mb-6">
               <div className="text-white/60">function <span className="text-primary">allieCaton</span>() {"{"}</div>
               <div className="pl-8 py-6">
-                <div className="text-primary">full-stack software engineer</div>
+                <div className="text-primary animate-typing">full-stack software engineer</div>
               </div>
               <div className="text-white/60">{"}"}</div>
             </div>
@@ -38,13 +38,13 @@ const Index = () => {
               <div className="mt-2 flex space-x-4">
                 <span className="text-white/60">&gt;&gt;</span>
                 <div className="flex space-x-4">
-                  <a href="https://github.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors">
+                  <a href="https://github.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                     <Github size={20} />
                   </a>
-                  <a href="/resume.pdf" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors">
+                  <a href="/resume.pdf" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                     <FileText size={20} />
                   </a>
-                  <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors">
+                  <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                     <Linkedin size={20} />
                   </a>
                 </div>
@@ -53,7 +53,7 @@ const Index = () => {
           </div>
           
           <div className="flex justify-center">
-            <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10">
+            <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
               <img 
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop" 
                 alt="Profile" 
@@ -85,19 +85,19 @@ const Index = () => {
           <div>
             <h2 className="text-2xl text-white/80 mb-6">Work Experience</h2>
             <div className="space-y-6">
-              <div>
+              <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">Full-stack Software Engineer</h3>
                 <p className="text-white/80">Mainstay</p>
               </div>
-              <div>
+              <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">Frontend Software Engineer</h3>
                 <p className="text-white/80">The Atlas for Cities</p>
               </div>
-              <div>
+              <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">Software Engineer, Contract</h3>
                 <p className="text-white/80">FableVision Studios</p>
               </div>
-              <div>
+              <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">Associate Producer</h3>
                 <p className="text-white/80">FableVision Studios</p>
               </div>
@@ -116,7 +116,7 @@ const Index = () => {
           <h2 className="text-2xl text-white/80 mb-12">Projects</h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
+            <div className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-fairy-purple/20 p-4 rounded-lg">
               <h3 className="text-xl text-primary mb-3">MarketEdge</h3>
               <p className="text-white/90 mb-4">
                 Data dashboard for B2G companies to track active RFP procurement opportunities and other vital information for their sales & marketing efforts. Link below links to a marketing website for the MarketEdge application, as the application itself is a paid product.
@@ -137,7 +137,7 @@ const Index = () => {
               </a>
             </div>
             
-            <div>
+            <div className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-fairy-purple/20 p-4 rounded-lg">
               <h3 className="text-xl text-primary mb-3">The Atlas</h3>
               <p className="text-white/90 mb-4">
                 LinkedIn style community for local government officials to connect and share resources. Includes posting functionality, private messaging, and case study article creator/editor and viewer.
@@ -160,7 +160,7 @@ const Index = () => {
               </a>
             </div>
             
-            <div>
+            <div className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-fairy-purple/20 p-4 rounded-lg">
               <h3 className="text-xl text-primary mb-3">Thinking Money 4 Kids</h3>
               <p className="text-white/90 mb-4">
                 Suite of browser-based games and activities built for The American Library Association & FINRA to teach kids about financial literacy. My work on this project also included creating android applications.
@@ -175,7 +175,7 @@ const Index = () => {
               </a>
             </div>
             
-            <div>
+            <div className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-fairy-purple/20 p-4 rounded-lg">
               <h3 className="text-xl text-primary mb-3">Digital Garden Client & API</h3>
               <p className="text-white/90 mb-4">
                 Simple personal website used to blog about dev projects, and other things that are on my mind.
@@ -219,13 +219,13 @@ const Index = () => {
             <div className="mt-4 flex space-x-4">
               <span>&gt;&gt;</span>
               <div className="flex space-x-4">
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors">
+                <a href="https://github.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                   <Github size={20} />
                 </a>
-                <a href="/resume.pdf" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors">
+                <a href="/resume.pdf" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                   <FileText size={20} />
                 </a>
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors">
+                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                   <Linkedin size={20} />
                 </a>
               </div>

@@ -42,6 +42,29 @@
     @apply border-border;
   }
 
+  html, body {
+    cursor: none;
+  }
+
+  a, button, [role="button"] {
+    cursor: none;
+  }
+
+  .custom-cursor-outer {
+    width: 32px;
+    height: 32px;
+    border: 2px solid theme('colors.fairy.purple');
+    opacity: 0.6;
+    mix-blend-mode: difference;
+  }
+
+  .custom-cursor-inner {
+    width: 8px;
+    height: 8px;
+    background-color: theme('colors.fairy.yellow');
+    opacity: 0.8;
+  }
+
   body {
     @apply bg-background text-foreground font-mono;
     scrollbar-width: thin;
@@ -74,5 +97,82 @@
 
   .code-block {
     @apply font-mono text-sm;
+  }
+
+  /* Animations */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce-subtle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-typing {
+    overflow: hidden;
+    border-right: 2px solid theme('colors.fairy.purple');
+    white-space: nowrap;
+    animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+  }
+
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: theme('colors.fairy.purple') }
+  }
+
+  .nav-link {
+    @apply text-fairy-dark-purple relative overflow-hidden font-mono;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary transform scale-x-0 transition-transform duration-300 origin-bottom-right;
+  }
+
+  .nav-link:hover::after {
+    @apply transform scale-x-100 origin-bottom-left;
+  }
+
+  .text-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-fairy-yellow to-fairy-purple;
   }
 }
