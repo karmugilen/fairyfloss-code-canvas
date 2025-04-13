@@ -26,11 +26,11 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div>
             <div className="code-block mb-6">
-              <div className="text-white/60">function <span className="text-primary">allieCaton</span>() {</div>
+              <div className="text-white/60">function <span className="text-primary">allieCaton</span>() {"{"}</div>
               <div className="pl-8 py-6">
                 <div className="text-primary">full-stack software engineer</div>
               </div>
-              <div className="text-white/60">}</div>
+              <div className="text-white/60">{"}"}</div>
             </div>
             
             <div className="mt-8 code-block">
