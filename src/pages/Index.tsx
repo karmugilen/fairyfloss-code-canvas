@@ -55,7 +55,7 @@ const Index = () => {
           <div className="flex justify-center">
             <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
               <img 
-                src="src\pages\image1.png" 
+                src="https://media.licdn.com/dms/image/v2/D5603AQFreXR8YWO8SA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1713289608180?e=1750291200&v=beta&t=8uKZFdCxQ_KB-RWvQFJ7DwhNea29kQBzQ3rYK7Q6I60" 
                 alt="Profile" 
                 className="w-full h-full object-cover"
               />
