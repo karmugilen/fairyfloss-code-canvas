@@ -26,7 +26,7 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="animate-fade-in">
             <div className="code-block mb-6">
-              <div className="text-white/60">function <span className="text-primary">allieCaton</span>() {"{"}</div>
+              <div className="text-white/60">function <span className="text-primary">karmugil</span>() {"{"}</div>
               <div className="pl-8 py-6">
                 <div className="text-primary animate-typing">full-stack software engineer</div>
               </div>
@@ -38,13 +38,13 @@ const Index = () => {
               <div className="mt-2 flex space-x-4">
                 <span className="text-white/60">&gt;&gt;</span>
                 <div className="flex space-x-4">
-                  <a href="https://github.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
+                  <a href="https://github.com/karmugilen" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                     <Github size={20} />
                   </a>
                   <a href="/resume.pdf" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                     <FileText size={20} />
                   </a>
-                  <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
+                  <a href="https://www.linkedin.com/in/karmugil-k-a0a1131a3/" target="_blank" rel="noreferrer" className="text-white hover:text-primary transition-colors transform hover:scale-110 duration-200">
                     <Linkedin size={20} />
                   </a>
                 </div>
@@ -55,7 +55,7 @@ const Index = () => {
           <div className="flex justify-center">
             <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
               <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop" 
+                src="src\pages\image1.png" 
                 alt="Profile" 
                 className="w-full h-full object-cover"
               />
