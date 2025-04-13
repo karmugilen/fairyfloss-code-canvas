@@ -23,7 +23,7 @@ const Index = () => {
 
       {/* Hero Section */}
       <section id="hero" className="min-h-[70vh] flex items-center">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
           <div className="animate-fade-in">
             <div className="code-block mb-6">
               <div className="text-white/60">function <span className="text-primary">karmugil</span>() {"{"}</div>
@@ -65,7 +65,7 @@ const Index = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-16">
+      <section id="about" className="pt-0 pb-16 md:py-16">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
             <h2 className="text-2xl text-white/80 mb-6">About</h2>
