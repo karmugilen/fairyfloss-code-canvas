@@ -71,7 +71,7 @@ const Index = () => {
             <h2 className="text-2xl text-white/80 mb-6">About</h2>
             <div className="space-y-4">
               <p className="text-primary">
-                I'm Allie, a full-stack software engineer. I'm interested in contributing to projects where my creativity and curiosity can be expressed, and my knowledge expanded. Teams where everyone -- my co-collaborators, stakeholders, leaders -- share a common goal in making an awesome product that delights its users.
+                I'm Karmugil, a full-stack software engineer. I'm interested in contributing to projects where my creativity and curiosity can be expressed, and my knowledge expanded. Teams where everyone -- my co-collaborators, stakeholders, leaders -- share a common goal in making an awesome product that delights its users.
               </p>
               <p className="text-primary">
                 I thrive on diving into projects that push my boundaries and spark interest. For me, it's all about mixing it up, whether it's coding, collaborating, or learning something totally new.
@@ -209,7 +209,7 @@ const Index = () => {
           <h2 className="text-2xl text-white/80 mb-8">Contact</h2>
           
           <p className="text-white/80 mb-2">
-            Please reach out to me at <a href="mailto:contact@example.com" className="text-primary hover:underline">contact@example.com</a> for inquiries.
+            Please reach out to me at <a href="mailto:karmugil251@gmail.com" className="text-primary hover:underline">contact@example.com</a> for inquiries.
           </p>
           
           <div className="mt-8 space-y-1 text-white/70">
