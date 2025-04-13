@@ -1,13 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-type CursorStyle = 'default' | 'dot' | 'ring' | 'glow';
-
-interface CustomCursorProps {
-  cursorStyle?: CursorStyle;
-}
-
-const CustomCursor = ({ cursorStyle = 'default' }: CustomCursorProps) => {
+const CustomCursor = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isClicking, setIsClicking] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -42,47 +36,38 @@ const CustomCursor = ({ cursorStyle = 'default' }: CustomCursorProps) => {
     };
   }, []);
 
-  const getCursorStyles = () => {
-    switch (cursorStyle) {
-      case 'dot':
-        return {
-          outer: 'border-2 border-primary bg-transparent w-8 h-8 rounded-full',
-          inner: 'w-4 h-4 bg-primary rounded-full'
-        };
-      case 'ring':
-        return {
-          outer: 'border-2 border-accent bg-transparent w-10 h-10 rounded-full',
-          inner: 'w-2 h-2 bg-accent rounded-full'
-        };
-      case 'glow':
-        return {
-          outer: 'border-none bg-primary/30 backdrop-blur-sm w-12 h-12 rounded-full',
-          inner: 'w-3 h-3 bg-white rounded-full'
-        };
-      default:
-        return {
-          outer: 'border-2 border-fairy-purple bg-transparent w-8 h-8 rounded-full',
-          inner: 'w-2 h-2 bg-fairy-yellow rounded-full'
-        };
-    }
-  };
-
-  const styles = getCursorStyles();
-
   return (
     <>
+      {/* Arrow cursor body */}
       <div 
-        className={`pointer-events-none fixed z-50 transition-transform duration-200 ${styles.outer}`}
+        className="pointer-events-none fixed z-50 transition-transform duration-200"
         style={{ 
           left: `${position.x}px`, 
           top: `${position.y}px`,
-          transform: `translate(-50%, -50%) scale(${isHovering ? 1.5 : 1}) ${isClicking ? 'scale(0.8)' : ''}`,
-          opacity: 0.6,
-          mixBlendMode: 'difference',
+          transform: `translate(-50%, -50%) rotate(-45deg) scale(${isHovering ? 1.2 : 1}) ${isClicking ? 'scale(0.8)' : ''}`,
         }}
-      />
+      >
+        <svg 
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="transition-transform duration-200"
+        >
+          <path 
+            d="M2 2L10 18L13 13L19 16L22 2L2 2Z" 
+            fill="#FEF7CD" 
+            stroke="#9b87f5" 
+            strokeWidth="1.5" 
+            className="animate-pulse-slow"
+          />
+        </svg>
+      </div>
+      
+      {/* Arrow point dot */}
       <div 
-        className={`pointer-events-none fixed z-50 ${styles.inner}`}
+        className="pointer-events-none fixed z-50 w-2 h-2 bg-primary rounded-full"
         style={{ 
           left: `${position.x}px`, 
           top: `${position.y}px`,
