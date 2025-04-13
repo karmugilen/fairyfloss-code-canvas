@@ -7,8 +7,8 @@
 
 @layer base {
   :root {
-    --background: 266 100% 98%;
-    --foreground: 266 10% 20%;
+    --background: 259 60% 45%;
+    --foreground: 0 0% 98%;
 
     --card: 0 0% 100%;
     --card-foreground: 266 10% 20%;
@@ -16,14 +16,14 @@
     --popover: 0 0% 100%;
     --popover-foreground: 266 10% 20%;
 
-    --primary: 266 80% 60%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 50 100% 70%;
+    --primary-foreground: 266 10% 20%;
 
-    --secondary: 60 100% 90%;
-    --secondary-foreground: 266 10% 20%;
+    --secondary: 266 100% 50%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 266 10% 92%;
-    --muted-foreground: 266 10% 40%;
+    --muted: 266 40% 35%;
+    --muted-foreground: 266 10% 90%;
 
     --accent: 180 70% 70%;
     --accent-foreground: 266 10% 20%;
@@ -31,7 +31,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 266 50% 88%;
+    --border: 266 50% 40%;
     --input: 214.3 31.8% 91.4%;
     --ring: 266 80% 60%;
 
@@ -43,9 +43,9 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-mono;
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.fairy.purple') theme('colors.muted');
+    scrollbar-color: theme('colors.muted.DEFAULT') theme('colors.background');
   }
 
   ::-webkit-scrollbar {
@@ -57,7 +57,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-fairy-purple rounded-full;
+    @apply bg-muted rounded-full;
   }
 
   html {
@@ -72,50 +72,7 @@
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  .text-gradient {
-    @apply bg-gradient-to-r from-fairy-dark-purple to-fairy-purple bg-clip-text text-transparent;
-  }
-
-  .card-glow {
-    @apply relative;
-  }
-
-  .card-glow::before {
-    content: '';
-    @apply absolute -inset-0.5 bg-gradient-to-r from-fairy-purple to-fairy-teal rounded-lg blur opacity-50 transition duration-300 group-hover:opacity-75;
-    z-index: -1;
-  }
-
   .code-block {
-    @apply font-mono bg-white/5 border border-fairy-purple/30 rounded-md py-2 px-3 text-sm;
-  }
-
-  .code-tag {
-    @apply text-fairy-teal;
-  }
-
-  .code-name {
-    @apply text-fairy-vivid-purple;
-  }
-
-  .code-string {
-    @apply text-fairy-yellow;
-  }
-
-  .code-comment {
-    @apply text-fairy-dark-purple/70;
-  }
-
-  .nav-link {
-    @apply relative transition duration-300 hover:text-fairy-purple;
-  }
-
-  .nav-link::after {
-    content: '';
-    @apply absolute left-0 bottom-0 w-0 h-0.5 bg-fairy-purple transition-all duration-300;
-  }
-
-  .nav-link:hover::after {
-    @apply w-full;
+    @apply font-mono text-sm;
   }
 }
