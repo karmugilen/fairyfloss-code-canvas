@@ -80,7 +80,7 @@ const Index = () => {
 
     const scheduleBlink = () => {
       // More often: open interval 600-1000ms
-      const openDuration = 600 + Math.random() * 400;
+      const openDuration = 3000 + Math.random() * 2000;
       nextBlinkTimeout.current = setTimeout(() => {
         if (Math.random() < 0.7) {
           doDoubleBlink();
