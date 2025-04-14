@@ -4,9 +4,10 @@ import { Github, Linkedin, FileText, ChevronRight } from 'lucide-react';
 
 // --- Define your image URLs here ---
 const profileImageOpen =
-  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image2.jpg?raw=true';
+  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image1.jpg?raw=true';
 // Provide a valid "eyes closed" image URL or fallback to open image
-const profileImageClosed ='https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image1.jpg?raw=true';
+const profileImageClosed =
+  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image2.jpg?raw=true';
 
 const SOCIAL_LINKS = [
   {
@@ -28,51 +29,78 @@ const SOCIAL_LINKS = [
 
 const Index = () => {
   const [isBlinking, setIsBlinking] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const blinkTimeout = useRef<NodeJS.Timeout | null>(null);
+  const nextBlinkTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Preload profile images for faster display and wait for both to load before showing
+  useEffect(() => {
+    let loaded = 0;
+    const handleLoad = () => {
+      loaded += 1;
+      if (loaded === 2) setImagesLoaded(true);
+    };
+    const openImg = new window.Image();
+    const closedImg = new window.Image();
+    openImg.onload = handleLoad;
+    closedImg.onload = handleLoad;
+    openImg.src = profileImageOpen;
+    closedImg.src = profileImageClosed;
+    // In case images are cached and load event doesn't fire
+    if (openImg.complete) handleLoad();
+    if (closedImg.complete) handleLoad();
+    // Cleanup not needed for Image objects
+  }, []);
 
   useEffect(() => {
-    const singleBlink = () => {
+    if (!imagesLoaded) return;
+    // Smooth, more frequent blinking
+    // Eyes closed for 80ms, open for 600-1000ms (randomized)
+    // Now: more double blinks (70%) than single (30%)
+
+    const doSingleBlink = () => {
       setIsBlinking(true);
-      timeoutRef.current = setTimeout(() => {
+      blinkTimeout.current = setTimeout(() => {
         setIsBlinking(false);
-      }, 150);
+      }, 50); // eyes closed for 80ms
     };
 
-    const doubleBlink = () => {
+    const doDoubleBlink = () => {
       setIsBlinking(true);
-      timeoutRef.current = setTimeout(() => {
+      blinkTimeout.current = setTimeout(() => {
         setIsBlinking(false);
-        timeoutRef.current = setTimeout(() => {
+        blinkTimeout.current = setTimeout(() => {
           setIsBlinking(true);
-          timeoutRef.current = setTimeout(() => {
+          blinkTimeout.current = setTimeout(() => {
             setIsBlinking(false);
-          }, 120);
-        }, 120);
-      }, 120);
+          }, 80); // second blink closed for 80ms
+        }, 120); // open between blinks for 120ms
+      }, 80); // first blink closed for 80ms
     };
 
-    const scheduleNextBlink = () => {
-      // Make it blink more often: reduce interval to 1000-2000ms
-      const blinkInterval = 1000 + Math.random() * 1000;
-      intervalRef.current = setTimeout(() => {
-        // Randomly choose single or double blink (e.g., 70% single, 30% double)
+    const scheduleBlink = () => {
+      // More often: open interval 600-1000ms
+      const openDuration = 600 + Math.random() * 400;
+      nextBlinkTimeout.current = setTimeout(() => {
         if (Math.random() < 0.7) {
-          singleBlink();
+          doDoubleBlink();
+          // double blink total closed+open+closed = 80+120+80 = 280ms
+          nextBlinkTimeout.current = setTimeout(scheduleBlink, 280);
         } else {
-          doubleBlink();
+          doSingleBlink();
+          // single blink closed = 80ms
+          nextBlinkTimeout.current = setTimeout(scheduleBlink, 80);
         }
-        scheduleNextBlink();
-      }, blinkInterval);
+      }, openDuration);
     };
 
-    scheduleNextBlink();
+    scheduleBlink();
 
     return () => {
-      if (intervalRef.current) clearTimeout(intervalRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (blinkTimeout.current) clearTimeout(blinkTimeout.current);
+      if (nextBlinkTimeout.current) clearTimeout(nextBlinkTimeout.current);
     };
-  }, []);
+  }, [imagesLoaded]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-mono">
@@ -156,12 +184,43 @@ const Index = () => {
           <div className="flex justify-center">
             {/* Updated image container */}
             <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
-              <img
-                src={isBlinking ? profileImageClosed : profileImageOpen}
-                alt="Profile"
-                className="w-full h-full object-cover"
-                loading="lazy"
-                draggable={false}
+              {/* Show a blank or skeleton until images are loaded */}
+              {!imagesLoaded ? (
+                <div className="w-full h-full bg-white/10 animate-pulse" />
+              ) : (
+                <>
+                  <img
+                    src={isBlinking ? profileImageClosed : profileImageOpen}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                    draggable={false}
+                    fetchPriority="high"
+                  />
+                  {/* Preload the other image in a hidden img for instant swap */}
+                  <img
+                    src={isBlinking ? profileImageOpen : profileImageClosed}
+                    alt=""
+                    style={{ display: 'none' }}
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+              {/* Use <link rel="preload"> for even faster image loading */}
+              {/* Preload images for faster display (must be in <head> for best effect, but here for demonstration) */}
+              <link
+                rel="preload"
+                as="image"
+                href={profileImageOpen}
+                imageSrcSet={profileImageOpen}
+                key="preload-open"
+              />
+              <link
+                rel="preload"
+                as="image"
+                href={profileImageClosed}
+                imageSrcSet={profileImageClosed}
+                key="preload-closed"
               />
             </div>
           </div>
