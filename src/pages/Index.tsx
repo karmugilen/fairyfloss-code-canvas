@@ -4,9 +4,9 @@ import { Github, Linkedin, FileText, ChevronRight } from 'lucide-react';
 
 // --- Define your image URLs here ---
 const profileImageOpen =
-  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image1.png?raw=true';
+  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image2.jpg?raw=true';
 // Provide a valid "eyes closed" image URL or fallback to open image
-const profileImageClosed ='https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image2.png?raw=true';
+const profileImageClosed ='https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image1.jpg?raw=true';
 
 const SOCIAL_LINKS = [
   {
@@ -53,7 +53,8 @@ const Index = () => {
     };
 
     const scheduleNextBlink = () => {
-      const blinkInterval = 3000 + Math.random() * 2000;
+      // Make it blink more often: reduce interval to 1000-2000ms
+      const blinkInterval = 1000 + Math.random() * 1000;
       intervalRef.current = setTimeout(() => {
         // Randomly choose single or double blink (e.g., 70% single, 30% double)
         if (Math.random() < 0.7) {
