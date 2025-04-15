@@ -421,10 +421,10 @@ const Index = () => {
           <p className="text-white/80 mb-2">
             Please reach out to me at{' '}
             <a
-              href="mailto:karmugil251@gmail.com"
+              href="mailto:karmugil@karmugil.com"
               className="text-primary hover:underline"
             >
-              karmugil251@gmail.com
+              karmugil@karmugil.com
             </a>{' '}
             for inquiries.
           </p>
