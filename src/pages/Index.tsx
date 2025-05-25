@@ -151,7 +151,7 @@ const Index = () => {
               </div>
               <div className="pl-8 py-6">
                 <div className="text-primary animate-typing">
-                  full-stack software engineer
+                Cybersecurity Researcher (Steganography)
                 </div>
               </div>
               <div className="text-white/60">{'}'}</div>
@@ -234,51 +234,45 @@ const Index = () => {
             <h2 className="text-2xl text-white/80 mb-6">About</h2>
             <div className="space-y-4">
               <p className="text-primary">
-                I'm Karmugil, a full-stack software engineer. I'm interested in
-                contributing to projects where my creativity and curiosity can
-                be expressed, and my knowledge expanded. Teams where everyone --
-                my co-collaborators, stakeholders, leaders -- share a common
-                goal in making an awesome product that delights its users.
+              I'm Karmugil, a PhD Researcher specializing in video steganography. My work involves intricate data embedding and extraction within both compressed and uncompressed video streams, leveraging advanced techniques like upscaling and frame generation to enhance capacity and robustness.
               </p>
               <p className="text-primary">
-                I thrive on diving into projects that push my boundaries and
-                spark interest. For me, it's all about mixing it up, whether
-                it's coding, collaborating, or learning something totally new.
+              My passion lies in pushing the boundaries of information hiding, where my creativity and curiosity drive me to develop novel solutions. I thrive on diving into complex challenges that expand my knowledge and foster collaborative environments aimed at advancing cybersecurity.
               </p>
               <p className="text-primary">
-                In my free time, I dabble in building electronic hardware, rock
-                climbing, reading, and mooning over my mechanical keyboard.
+              In my free time, I enjoy building electronic hardware, rock climbing, immersing myself in books, and appreciating the tactile satisfaction of my mechanical keyboard.
               </p>
             </div>
           </div>
 
           <div>
-            <h2 className="text-2xl text-white/80 mb-6">Work Experience</h2>
+            <h2 className="text-2xl text-white/80 mb-6">Education</h2>
             <div className="space-y-6">
               <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">
-                  Full-stack Software Engineer
+                Currently pursuing PhD in Computer Science
                 </h3>
-                <p className="text-white/80">Mainstay</p>
+                <p className="text-white/80">Vellore Institute of Technology 
+                </p>
               </div>
               <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">
-                  Frontend Software Engineer
+                  MSc Computer Science
                 </h3>
-                <p className="text-white/80">The Atlas for Cities</p>
+                <p className="text-white/80">Indian Arts and Science College</p>
               </div>
               <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">
-                  Software Engineer, Contract
+                  BSc Computer Science
                 </h3>
-                <p className="text-white/80">FableVision Studios</p>
+                <p className="text-white/80">Voorhees College</p>
               </div>
-              <div className="transform transition-all duration-300 hover:translate-x-2">
+              {/* <div className="transform transition-all duration-300 hover:translate-x-2">
                 <h3 className="text-primary font-semibold">
                   Associate Producer
                 </h3>
                 <p className="text-white/80">FableVision Studios</p>
-              </div>
+              </div> */}
 
               <a
                 href="#"
@@ -302,27 +296,15 @@ const Index = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-fairy-purple/20 p-4 rounded-lg">
-              <h3 className="text-xl text-primary mb-3">MarketEdge</h3>
+              <h3 className="text-xl text-primary mb-3">Infinite Storage Glitch</h3>
               <p className="text-white/90 mb-4">
-                Data dashboard for B2G companies to track active RFP procurement
-                opportunities and other vital information for their sales &
-                marketing efforts. Link below links to a marketing website for
-                the MarketEdge application, as the application itself is a paid
-                product.
+                Use YouTube as cloud storage by converting any zip file into a video, uploading it, and later retrieving and restoring your files. Inspired by DvorakDwarf's Infinite-Storage-Glitch, this Python version lets you archive files to zip, turn them into a video, upload to YouTube (unlisted), and recover your data by downloading and decoding the video. Only one zip file should be in the directory at a time. The program uses large pixel blocks to reduce corruption risk and provides simple functions to convert files to binary, create videos, and restore files from videos.
               </p>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-white/70">Vue3</span>
-                <span className="text-white/70">•</span>
-                <span className="text-white/70">TypeScript</span>
-                <span className="text-white/70">•</span>
-                <span className="text-white/70">Pinia</span>
-                <span className="text-white/70">•</span>
-                <span className="text-white/70">Laravel</span>
-                <span className="text-white/70">•</span>
-                <span className="text-white/70">Cypress</span>
+                <span className="text-white/70">Python</span>
               </div>
               <a
-                href="#"
+                href="https://github.com/KKarmugil/Infinite_Storage_Glitch"
                 className="inline-block bg-white/10 hover:bg-white/20 text-white px-4 py-1 rounded transition-colors"
               >
                 visit
