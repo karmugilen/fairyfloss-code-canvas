@@ -1,13 +1,8 @@
 // src/pages/Index.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Github, Linkedin, FileText, ChevronRight } from 'lucide-react';
-
-// --- Define your image URLs here ---
-const profileImageOpen =
-  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image1.jpg?raw=true';
-// Provide a valid "eyes closed" image URL or fallback to open image
-const profileImageClosed =
-  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image2.jpg?raw=true';
+import profileImageOpen from './image1.jxl';
+import profileImageClosed from './image2.jxl';
 
 const SOCIAL_LINKS = [
   {
