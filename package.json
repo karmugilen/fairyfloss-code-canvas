@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run optimize-images && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "optimize-images": "python3 src/pages/resize_image.py && python3 -c \"from PIL import Image; import os; [Image.open(f'src/pages/{f}').save(f'public/images/{f.replace('.jpg', '')}.webp', 'WEBP', quality=80, method=6) for f in ['image1.jpg', 'image2.jpg'] if os.path.exists(f'src/pages/{f}')]; print('WebP conversion complete')\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

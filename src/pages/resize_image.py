@@ -57,7 +57,7 @@ def batch_resize_images(input_dir, output_dir, max_dimension=800):
 if __name__ == "__main__":
     # For your specific case with the images in this directory:
     input_dir = '.'
-    output_dir = './resized_images'
+    output_dir = '../../public/images'
     
     # Resize images to have a maximum dimension of 400 pixels
     batch_resize_images(input_dir, output_dir, 400)

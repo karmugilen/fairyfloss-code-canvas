@@ -3,11 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Github, Linkedin, FileText, ChevronRight } from 'lucide-react';
 
 // --- Define your image URLs here ---
-const profileImageOpen =
-  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image1.jpg?raw=true';
-// Provide a valid "eyes closed" image URL or fallback to open image
-const profileImageClosed =
-  'https://github.com/karmugilen/fairyfloss-code-canvas/blob/main/src/pages/image2.jpg?raw=true';
+const profileImageOpen = '/images/image1.webp';
+const profileImageClosed = '/images/image2.webp';
 
 const SOCIAL_LINKS = [
   {
@@ -182,46 +179,29 @@ const Index = () => {
           </div>
 
           <div className="flex justify-center">
-            {/* Updated image container */}
+            {/* Updated image container with optimized image loading */}
             <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
               {/* Show a blank or skeleton until images are loaded */}
               {!imagesLoaded ? (
                 <div className="w-full h-full bg-white/10 animate-pulse" />
               ) : (
-                <>
+                <picture>
+                  <source 
+                    srcSet={isBlinking ? profileImageClosed : profileImageOpen} 
+                    type="image/webp" 
+                  />
                   <img
-                    src={isBlinking ? profileImageClosed : profileImageOpen}
+                    src={isBlinking ? profileImageClosed.replace('.webp', '.jpg') : profileImageOpen.replace('.webp', '.jpg')}
                     alt="Profile"
                     className="w-full h-full object-cover"
                     loading="eager"
-                    draggable={false}
+                    decoding="async"
                     fetchPriority="high"
+                    width="320"
+                    height="320"
                   />
-                  {/* Preload the other image in a hidden img for instant swap */}
-                  <img
-                    src={isBlinking ? profileImageOpen : profileImageClosed}
-                    alt=""
-                    style={{ display: 'none' }}
-                    aria-hidden="true"
-                  />
-                </>
+                </picture>
               )}
-              {/* Use <link rel="preload"> for even faster image loading */}
-              {/* Preload images for faster display (must be in <head> for best effect, but here for demonstration) */}
-              <link
-                rel="preload"
-                as="image"
-                href={profileImageOpen}
-                imageSrcSet={profileImageOpen}
-                key="preload-open"
-              />
-              <link
-                rel="preload"
-                as="image"
-                href={profileImageClosed}
-                imageSrcSet={profileImageClosed}
-                key="preload-closed"
-              />
             </div>
           </div>
         </div>

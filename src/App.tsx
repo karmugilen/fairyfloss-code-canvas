@@ -8,7 +8,14 @@ import NotFound from "./pages/NotFound";
 import CustomCursor from "./components/CustomCursor";
 import { useIsMobile } from "./hooks/use-mobile";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 const App = () => {
   const isMobile = useIsMobile();
