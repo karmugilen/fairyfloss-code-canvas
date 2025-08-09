@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Github, Linkedin, FileText, ChevronRight } from 'lucide-react';
 
 // --- Define your image URLs here ---
-const profileImageOpen = '/images/image1.webp';
-const profileImageClosed = '/images/image2.webp';
+const profileImageOpen = '/images/image1.jpg';
+const profileImageClosed = '/images/image2.jpg';
 
 const SOCIAL_LINKS = [
   {
@@ -187,11 +187,13 @@ const Index = () => {
               ) : (
                 <picture>
                   <source 
-                    srcSet={isBlinking ? profileImageClosed : profileImageOpen} 
-                    type="image/webp" 
+                    srcSet={`${isBlinking ? '/images/small/image2.jpg' : '/images/small/image1.jpg'} 400w, ${isBlinking ? '/images/image2.jpg' : '/images/image1.jpg'} 800w`} 
+                    sizes="(max-width: 640px) 400px, 800px"
                   />
                   <img
-                    src={isBlinking ? profileImageClosed.replace('.webp', '.jpg') : profileImageOpen.replace('.webp', '.jpg')}
+                    src={isBlinking ? '/images/image2.jpg' : '/images/image1.jpg'}
+                    srcSet={`${isBlinking ? '/images/small/image2.jpg' : '/images/small/image1.jpg'} 400w, ${isBlinking ? '/images/image2.jpg' : '/images/image1.jpg'} 800w`}
+                    sizes="(max-width: 640px) 400px, 800px"
                     alt="Profile"
                     className="w-full h-full object-cover"
                     loading="eager"

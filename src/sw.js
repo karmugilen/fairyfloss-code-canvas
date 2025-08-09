@@ -1,8 +1,10 @@
 const CACHE_NAME = 'fairyfloss-cache-v1';
 const urlsToCache = [
   '/',
-  '/images/image1.webp',
-  '/images/image2.webp',
+  '/images/image1.jpg',
+  '/images/image2.jpg',
+  '/images/small/image1.jpg',
+  '/images/small/image2.jpg',
 ];
 
 self.addEventListener('install', (event) => {

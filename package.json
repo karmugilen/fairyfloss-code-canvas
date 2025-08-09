@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:minimal": "vite --config vite-minimal.config.ts",
     "build": "npm run optimize-images && vite build",
-    "build:dev": "vite build --mode development",
+    "build:minimal": "vite build --config vite-minimal.config.ts",
+    "build:ultrafast": "vite build --config vite-ultrafast.config.ts && mv dist-ultrafast/ultrafast.html dist-ultrafast/index.html && rm -rf dist-ultrafast/favicon.ico dist-ultrafast/placeholder.svg dist-ultrafast/robots.txt dist-ultrafast/minimal.html dist-ultrafast/ultra-minimal.html dist-ultrafast/images/",
+    "serve:minimal": "vite preview --config vite-minimal.config.ts --port 3000",
+    "serve:ultrafast": "vite preview --config vite-ultrafast.config.ts --port 3001",
     "lint": "eslint .",
     "preview": "vite preview",
-    "optimize-images": "python3 src/pages/resize_image.py && python3 -c \"from PIL import Image; import os; [Image.open(f'src/pages/{f}').save(f'public/images/{f.replace('.jpg', '')}.webp', 'WEBP', quality=80, method=6) for f in ['image1.jpg', 'image2.jpg'] if os.path.exists(f'src/pages/{f}')]; print('WebP conversion complete')\""
+    "optimize-images": "python3 src/pages/resize_image.py && python3 src/pages/convert_to_progressive_jpeg.py"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
