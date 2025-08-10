@@ -49,12 +49,21 @@ const Index = () => {
       setIsBlinking(true);
       blinkTimeout.current = setTimeout(() => {
         setIsBlinking(false);
-      }, 80);
+      }, 100);
       return;
     }
     
-    // Trigger a double blink
-    doDoubleBlink();
+    // Trigger an instant double blink for user interaction
+    setIsBlinking(true);
+    blinkTimeout.current = setTimeout(() => {
+      setIsBlinking(false);
+      blinkTimeout.current = setTimeout(() => {
+        setIsBlinking(true);
+        blinkTimeout.current = setTimeout(() => {
+          setIsBlinking(false);
+        }, 100);
+      }, 150);
+    }, 100);
   };
 
   // Preload profile images for faster display and wait for both to load before showing
@@ -208,7 +217,7 @@ const Index = () => {
           <div className="flex justify-center">
             {/* Updated image container with optimized image loading */}
             <div 
-              className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer"
+              className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer transition-transform hover:scale-105 active:scale-95"
               onClick={triggerBlink}
               onTouchStart={triggerBlink}
             >
