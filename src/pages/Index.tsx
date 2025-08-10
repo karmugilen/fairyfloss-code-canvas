@@ -29,6 +29,33 @@ const Index = () => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const blinkTimeout = useRef<NodeJS.Timeout | null>(null);
   const nextBlinkTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isBlinkingRef = useRef(isBlinking);
+
+  // Update ref when isBlinking changes
+  useEffect(() => {
+    isBlinkingRef.current = isBlinking;
+  }, [isBlinking]);
+
+  // Function to trigger blink on click/tap
+  const triggerBlink = () => {
+    // Clear any existing blink timeouts
+    if (blinkTimeout.current) {
+      clearTimeout(blinkTimeout.current);
+      blinkTimeout.current = null;
+    }
+    
+    // If already blinking, just extend the blink
+    if (isBlinkingRef.current) {
+      setIsBlinking(true);
+      blinkTimeout.current = setTimeout(() => {
+        setIsBlinking(false);
+      }, 80);
+      return;
+    }
+    
+    // Trigger a double blink
+    doDoubleBlink();
+  };
 
   // Preload profile images for faster display and wait for both to load before showing
   useEffect(() => {
@@ -59,7 +86,7 @@ const Index = () => {
       setIsBlinking(true);
       blinkTimeout.current = setTimeout(() => {
         setIsBlinking(false);
-      }, 50); // eyes closed for 80ms
+      }, 80); // eyes closed for 80ms
     };
 
     const doDoubleBlink = () => {
@@ -180,7 +207,11 @@ const Index = () => {
 
           <div className="flex justify-center">
             {/* Updated image container with optimized image loading */}
-            <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
+            <div 
+              className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer"
+              onClick={triggerBlink}
+              onTouchStart={triggerBlink}
+            >
               {/* Show a blank or skeleton until images are loaded */}
               {!imagesLoaded ? (
                 <div className="w-full h-full bg-white/10 animate-pulse" />
