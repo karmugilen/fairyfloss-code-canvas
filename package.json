@@ -6,14 +6,15 @@
   "scripts": {
     "dev": "vite",
     "dev:minimal": "vite --config vite-minimal.config.ts",
-    "build": "npm run optimize-images && vite build",
+    "build": "npm run optimize-images-if-possible && vite build",
     "build:minimal": "vite build --config vite-minimal.config.ts",
     "build:ultrafast": "vite build --config vite-ultrafast.config.ts && mv dist-ultrafast/ultrafast.html dist-ultrafast/index.html && rm -rf dist-ultrafast/favicon.ico dist-ultrafast/placeholder.svg dist-ultrafast/robots.txt dist-ultrafast/minimal.html dist-ultrafast/ultra-minimal.html dist-ultrafast/images/",
     "serve:minimal": "vite preview --config vite-minimal.config.ts --port 3000",
     "serve:ultrafast": "vite preview --config vite-ultrafast.config.ts --port 3001",
     "lint": "eslint .",
     "preview": "vite preview",
-    "optimize-images": "python3 src/pages/resize_image.py && python3 src/pages/convert_to_progressive_jpeg.py && python3 src/pages/convert_to_jxl.py"
+    "optimize-images-if-possible": "python3 src/pages/optimize_images.py || echo 'Skipping image optimization - Python dependencies not available'",
+    "optimize-images": "python3 src/pages/optimize_images.py"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
