@@ -185,24 +185,16 @@ const Index = () => {
               {!imagesLoaded ? (
                 <div className="w-full h-full bg-white/10 animate-pulse" />
               ) : (
-                <picture>
-                  <source 
-                    srcSet={`${isBlinking ? '/images/small/image2.jpg' : '/images/small/image1.jpg'} 400w, ${isBlinking ? '/images/image2.jpg' : '/images/image1.jpg'} 800w`} 
-                    sizes="(max-width: 640px) 400px, 800px"
-                  />
-                  <img
-                    src={isBlinking ? '/images/image2.jpg' : '/images/image1.jpg'}
-                    srcSet={`${isBlinking ? '/images/small/image2.jpg' : '/images/small/image1.jpg'} 400w, ${isBlinking ? '/images/image2.jpg' : '/images/image1.jpg'} 800w`}
-                    sizes="(max-width: 640px) 400px, 800px"
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
-                    width="320"
-                    height="320"
-                  />
-                </picture>
+                <img
+                  src={isBlinking ? '/images/jxl/image2.jxl' : '/images/jxl/image1.jxl'}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                  width="320"
+                  height="320"
+                />
               )}
             </div>
           </div>
