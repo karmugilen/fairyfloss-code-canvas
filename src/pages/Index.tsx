@@ -37,7 +37,12 @@ const Index = () => {
   }, [isBlinking]);
 
   // Function to trigger blink on click/tap
-  const triggerBlink = () => {
+  const triggerBlink = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default touch behavior on mobile
+    if (e.type === 'touchstart') {
+      e.preventDefault();
+    }
+    
     // Clear any existing blink timeouts
     if (blinkTimeout.current) {
       clearTimeout(blinkTimeout.current);
@@ -49,7 +54,7 @@ const Index = () => {
       setIsBlinking(true);
       blinkTimeout.current = setTimeout(() => {
         setIsBlinking(false);
-      }, 100);
+      }, 120);
       return;
     }
     
@@ -61,9 +66,9 @@ const Index = () => {
         setIsBlinking(true);
         blinkTimeout.current = setTimeout(() => {
           setIsBlinking(false);
-        }, 100);
+        }, 120);
       }, 150);
-    }, 100);
+    }, 120);
   };
 
   // Preload profile images for faster display and wait for both to load before showing
@@ -71,65 +76,84 @@ const Index = () => {
     let loaded = 0;
     const handleLoad = () => {
       loaded += 1;
-      if (loaded === 2) setImagesLoaded(true);
+      if (loaded === 4) setImagesLoaded(true); // 4 images: open/close JPG + open/close JXL
     };
+    
+    // Preload JPG images
     const openImg = new window.Image();
     const closedImg = new window.Image();
     openImg.onload = handleLoad;
     closedImg.onload = handleLoad;
     openImg.src = profileImageOpen;
     closedImg.src = profileImageClosed;
+    
+    // Preload JXL images
+    const openJxlImg = new window.Image();
+    const closedJxlImg = new window.Image();
+    openJxlImg.onload = handleLoad;
+    closedJxlImg.onload = handleLoad;
+    openJxlImg.src = '/images/jxl/image1.jxl';
+    closedJxlImg.src = '/images/jxl/image2.jxl';
+    
     // In case images are cached and load event doesn't fire
     if (openImg.complete) handleLoad();
     if (closedImg.complete) handleLoad();
+    if (openJxlImg.complete) handleLoad();
+    if (closedJxlImg.complete) handleLoad();
+    
     // Cleanup not needed for Image objects
   }, []);
 
   useEffect(() => {
     if (!imagesLoaded) return;
-    // Smooth, more frequent blinking
-    // Eyes closed for 80ms, open for 600-1000ms (randomized)
-    // Now: more double blinks (70%) than single (30%)
+    
+    // Add a small delay before starting automatic blinking to ensure smooth transitions
+    const initialDelay = setTimeout(() => {
+      // Smooth, more frequent blinking
+      // Eyes closed for 80ms, open for 600-1000ms (randomized)
+      // Now: more double blinks (70%) than single (30%)
 
-    const doSingleBlink = () => {
-      setIsBlinking(true);
-      blinkTimeout.current = setTimeout(() => {
-        setIsBlinking(false);
-      }, 80); // eyes closed for 80ms
-    };
-
-    const doDoubleBlink = () => {
-      setIsBlinking(true);
-      blinkTimeout.current = setTimeout(() => {
-        setIsBlinking(false);
+      const doSingleBlink = () => {
+        setIsBlinking(true);
         blinkTimeout.current = setTimeout(() => {
-          setIsBlinking(true);
+          setIsBlinking(false);
+        }, 80); // eyes closed for 80ms
+      };
+
+      const doDoubleBlink = () => {
+        setIsBlinking(true);
+        blinkTimeout.current = setTimeout(() => {
+          setIsBlinking(false);
           blinkTimeout.current = setTimeout(() => {
-            setIsBlinking(false);
-          }, 80); // second blink closed for 80ms
-        }, 120); // open between blinks for 120ms
-      }, 80); // first blink closed for 80ms
-    };
+            setIsBlinking(true);
+            blinkTimeout.current = setTimeout(() => {
+              setIsBlinking(false);
+            }, 80); // second blink closed for 80ms
+          }, 120); // open between blinks for 120ms
+        }, 80); // first blink closed for 80ms
+      };
 
-    const scheduleBlink = () => {
-      // More often: open interval 600-1000ms
-      const openDuration = 3000 + Math.random() * 2000;
-      nextBlinkTimeout.current = setTimeout(() => {
-        if (Math.random() < 0.7) {
-          doDoubleBlink();
-          // double blink total closed+open+closed = 80+120+80 = 280ms
-          nextBlinkTimeout.current = setTimeout(scheduleBlink, 280);
-        } else {
-          doSingleBlink();
-          // single blink closed = 80ms
-          nextBlinkTimeout.current = setTimeout(scheduleBlink, 80);
-        }
-      }, openDuration);
-    };
+      const scheduleBlink = () => {
+        // More often: open interval 600-1000ms
+        const openDuration = 3000 + Math.random() * 2000;
+        nextBlinkTimeout.current = setTimeout(() => {
+          if (Math.random() < 0.7) {
+            doDoubleBlink();
+            // double blink total closed+open+closed = 80+120+80 = 280ms
+            nextBlinkTimeout.current = setTimeout(scheduleBlink, 280);
+          } else {
+            doSingleBlink();
+            // single blink closed = 80ms
+            nextBlinkTimeout.current = setTimeout(scheduleBlink, 80);
+          }
+        }, openDuration);
+      };
 
-    scheduleBlink();
+      scheduleBlink();
+    }, 500); // 500ms delay before starting automatic blinking
 
     return () => {
+      clearTimeout(initialDelay);
       if (blinkTimeout.current) clearTimeout(blinkTimeout.current);
       if (nextBlinkTimeout.current) clearTimeout(nextBlinkTimeout.current);
     };
