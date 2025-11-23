@@ -7,7 +7,7 @@ export const SOCIAL_LINKS = [
         icon: Github,
     },
     {
-        href: '/resume.pdf',
+        href: '/Resume.pdf',
         label: 'Resume',
         icon: FileText,
     },
