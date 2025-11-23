@@ -66,28 +66,30 @@ const HeroSection = () => {
                     </div>
                 </div>
 
-                <div className="flex justify-center">
-                    <div
-                        className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                        onClick={triggerBlink}
-                        onTouchStart={triggerBlink}
-                    >
-                        {!imagesLoaded ? (
-                            <div className="w-full h-full bg-white/10 animate-pulse" />
-                        ) : (
-                            <img
-                                src={
-                                    isBlinking ? PROFILE_IMAGES.closed : PROFILE_IMAGES.open
-                                }
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                                loading="eager"
-                                decoding="async"
-                                fetchPriority="high"
-                                width="320"
-                                height="320"
-                            />
-                        )}
+                <div
+                    className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    onClick={triggerBlink}
+                    onTouchStart={triggerBlink}
+                >
+                    <div className="relative w-full h-full">
+                        {/* Loading placeholder - fades out when images load */}
+                        <div
+                            className={`absolute inset-0 bg-white/10 transition-opacity duration-500 ${imagesLoaded ? 'opacity-0' : 'opacity-100'
+                                }`}
+                        />
+
+                        {/* Actual image - fades in when loaded */}
+                        <img
+                            src={isBlinking ? PROFILE_IMAGES.closed : PROFILE_IMAGES.open}
+                            alt="Profile"
+                            className={`w-full h-full object-cover transition-opacity duration-500 ${imagesLoaded ? 'opacity-100' : 'opacity-0'
+                                }`}
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
+                            width="320"
+                            height="320"
+                        />
                     </div>
                 </div>
             </div>
