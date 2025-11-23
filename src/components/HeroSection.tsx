@@ -8,7 +8,6 @@ const HeroSection = () => {
     const handleBlinkClick = () => {
         // Force GIF reload by adding timestamp to prevent caching
         setTimestamp(Date.now());
-        setImageLoaded(false); // Reset loading state
     };
 
     return (
