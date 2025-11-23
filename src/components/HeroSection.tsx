@@ -73,22 +73,19 @@ const HeroSection = () => {
                         onTouchStart={triggerBlink}
                     >
                         <div className="relative w-full h-full">
-                            {/* Loading placeholder - fades out when images load */}
+                            {/* Loading placeholder - simple fade out */}
                             <div
                                 className={`absolute inset-0 bg-white/10 transition-opacity duration-500 ${imagesLoaded ? 'opacity-0' : 'opacity-100'
                                     }`}
                             />
 
-                            {/* Open eyes image - always rendered */}
+                            {/* Open eyes image - instant switch, no transition */}
                             <img
                                 src={PROFILE_IMAGES.open}
                                 alt="Profile"
-                                className={`absolute inset-0 w-full h-full object-cover transition-[filter,transform] duration-700 ${imagesLoaded && !isBlinking
-                                        ? 'opacity-100 blur-0 scale-100'
-                                        : imagesLoaded
-                                            ? 'opacity-0 blur-0 scale-100'
-                                            : 'opacity-100 blur-2xl scale-110'
+                                className={`absolute inset-0 w-full h-full object-cover ${imagesLoaded && !isBlinking ? 'opacity-100' : 'opacity-0'
                                     }`}
+                                style={{ transform: 'translateZ(0)', willChange: 'opacity' }}
                                 loading="eager"
                                 decoding="async"
                                 fetchPriority="high"
@@ -96,16 +93,13 @@ const HeroSection = () => {
                                 height="320"
                             />
 
-                            {/* Closed eyes image - always rendered */}
+                            {/* Closed eyes image - instant switch for blinking */}
                             <img
                                 src={PROFILE_IMAGES.closed}
                                 alt="Profile blinking"
-                                className={`absolute inset-0 w-full h-full object-cover transition-[filter,transform] duration-700 ${imagesLoaded && isBlinking
-                                        ? 'opacity-100 blur-0 scale-100'
-                                        : imagesLoaded
-                                            ? 'opacity-0 blur-0 scale-100'
-                                            : 'opacity-0 blur-2xl scale-110'
+                                className={`absolute inset-0 w-full h-full object-cover ${imagesLoaded && isBlinking ? 'opacity-100' : 'opacity-0'
                                     }`}
+                                style={{ transform: 'translateZ(0)', willChange: 'opacity' }}
                                 loading="eager"
                                 decoding="async"
                                 width="320"

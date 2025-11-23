@@ -81,7 +81,7 @@ export const useBlink = (imagesLoaded: boolean) => {
             };
 
             scheduleBlink();
-        }, 1200);
+        }, 800);
 
         return () => {
             clearTimeout(initialDelay);
