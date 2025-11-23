@@ -11,6 +11,9 @@ export const useBlink = (imagesLoaded: boolean) => {
     }, [isBlinking]);
 
     const triggerBlink = (e?: React.MouseEvent | React.TouchEvent) => {
+        // Don't allow blinking until images are loaded
+        if (!imagesLoaded) return;
+
         if (e && e.type === 'touchstart') {
             e.preventDefault();
         }

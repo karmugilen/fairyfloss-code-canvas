@@ -79,15 +79,35 @@ const HeroSection = () => {
                                     }`}
                             />
 
-                            {/* Actual image - fades in when loaded */}
+                            {/* Open eyes image - always rendered */}
                             <img
-                                src={isBlinking ? PROFILE_IMAGES.closed : PROFILE_IMAGES.open}
+                                src={PROFILE_IMAGES.open}
                                 alt="Profile"
-                                className={`w-full h-full object-cover transition-opacity duration-500 ${imagesLoaded ? 'opacity-100' : 'opacity-0'
+                                className={`absolute inset-0 w-full h-full object-cover transition-[filter,transform] duration-700 ${imagesLoaded && !isBlinking
+                                        ? 'opacity-100 blur-0 scale-100'
+                                        : imagesLoaded
+                                            ? 'opacity-0 blur-0 scale-100'
+                                            : 'opacity-100 blur-2xl scale-110'
                                     }`}
                                 loading="eager"
                                 decoding="async"
                                 fetchPriority="high"
+                                width="320"
+                                height="320"
+                            />
+
+                            {/* Closed eyes image - always rendered */}
+                            <img
+                                src={PROFILE_IMAGES.closed}
+                                alt="Profile blinking"
+                                className={`absolute inset-0 w-full h-full object-cover transition-[filter,transform] duration-700 ${imagesLoaded && isBlinking
+                                        ? 'opacity-100 blur-0 scale-100'
+                                        : imagesLoaded
+                                            ? 'opacity-0 blur-0 scale-100'
+                                            : 'opacity-0 blur-2xl scale-110'
+                                    }`}
+                                loading="eager"
+                                decoding="async"
                                 width="320"
                                 height="320"
                             />
