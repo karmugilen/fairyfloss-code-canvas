@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SOCIAL_LINKS } from '../data/portfolio';
 
 const HeroSection = () => {
     const [timestamp, setTimestamp] = useState(Date.now());
-    const [imageLoaded, setImageLoaded] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        // Reset loaded state on component mount
+        setIsLoaded(false);
+    }, []);
 
     const handleBlinkClick = () => {
         // Force GIF reload by adding timestamp to prevent caching
@@ -56,22 +61,21 @@ const HeroSection = () => {
                         onClick={handleBlinkClick}
                         onTouchStart={handleBlinkClick}
                     >
-                        <div className="relative w-full h-full">
-                            {/* Loading placeholder */}
-                            {!imageLoaded && (
-                                <div className="absolute inset-0 bg-white/10 animate-pulse" />
-                            )}
-
-                            {/* Actual GIF image */}
+                        <div className="relative w-full h-full bg-white/5">
+                            {/* The GIF image with progressive blur effect */}
                             <img
                                 src={`/images/blink.gif?t=${timestamp}`}
                                 alt="Profile"
-                                className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'
-                                    }`}
+                                className="w-full h-full object-cover"
+                                style={{
+                                    filter: isLoaded ? 'blur(0px)' : 'blur(20px)',
+                                    transform: isLoaded ? 'scale(1)' : 'scale(1.1)',
+                                    transition: 'filter 0.5s ease-out, transform 0.5s ease-out'
+                                }}
                                 loading="eager"
                                 width="320"
                                 height="320"
-                                onLoad={() => setImageLoaded(true)}
+                                onLoad={() => setIsLoaded(true)}
                             />
                         </div>
                     </div>
