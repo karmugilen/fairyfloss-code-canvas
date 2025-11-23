@@ -1,31 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { SOCIAL_LINKS, PROFILE_IMAGES } from '../data/portfolio';
-import { useBlink } from '../hooks/useBlink';
+import React from 'react';
+import { SOCIAL_LINKS } from '../data/portfolio';
 
 const HeroSection = () => {
-    const [imagesLoaded, setImagesLoaded] = useState(false);
-    const { isBlinking, triggerBlink } = useBlink(imagesLoaded);
-
-    useEffect(() => {
-        let loaded = 0;
-        const handleLoad = () => {
-            loaded += 1;
-            if (loaded === 2) setImagesLoaded(true);
-        };
-
-        const images = [
-            PROFILE_IMAGES.open,
-            PROFILE_IMAGES.closed,
-        ];
-
-        images.forEach((src) => {
-            const img = new window.Image();
-            img.onload = handleLoad;
-            img.src = src;
-            if (img.complete) handleLoad();
-        });
-    }, []);
-
     return (
         <section id="hero" className="min-h-[70vh] flex items-center">
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
@@ -67,45 +43,15 @@ const HeroSection = () => {
                 </div>
 
                 <div className="flex justify-center">
-                    <div
-                        className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                        onClick={triggerBlink}
-                        onTouchStart={triggerBlink}
-                    >
-                        <div className="relative w-full h-full">
-                            {/* Loading placeholder - simple fade out */}
-                            <div
-                                className={`absolute inset-0 bg-white/10 transition-opacity duration-500 ${imagesLoaded ? 'opacity-0' : 'opacity-100'
-                                    }`}
-                            />
-
-                            {/* Open eyes image - instant switch, no transition */}
-                            <img
-                                src={PROFILE_IMAGES.open}
-                                alt="Profile"
-                                className={`absolute inset-0 w-full h-full object-cover ${imagesLoaded && !isBlinking ? 'opacity-100' : 'opacity-0'
-                                    }`}
-                                style={{ transform: 'translateZ(0)', willChange: 'opacity' }}
-                                loading="eager"
-                                decoding="async"
-                                fetchPriority="high"
-                                width="320"
-                                height="320"
-                            />
-
-                            {/* Closed eyes image - instant switch for blinking */}
-                            <img
-                                src={PROFILE_IMAGES.closed}
-                                alt="Profile blinking"
-                                className={`absolute inset-0 w-full h-full object-cover ${imagesLoaded && isBlinking ? 'opacity-100' : 'opacity-0'
-                                    }`}
-                                style={{ transform: 'translateZ(0)', willChange: 'opacity' }}
-                                loading="eager"
-                                decoding="async"
-                                width="320"
-                                height="320"
-                            />
-                        </div>
+                    <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
+                        <img
+                            src="/images/blink.gif"
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                            loading="eager"
+                            width="320"
+                            height="320"
+                        />
                     </div>
                 </div>
             </div>
