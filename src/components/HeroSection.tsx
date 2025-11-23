@@ -3,10 +3,12 @@ import { SOCIAL_LINKS } from '../data/portfolio';
 
 const HeroSection = () => {
     const [timestamp, setTimestamp] = useState(Date.now());
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     const handleBlinkClick = () => {
         // Force GIF reload by adding timestamp to prevent caching
         setTimestamp(Date.now());
+        setImageLoaded(false); // Reset loading state
     };
 
     return (
@@ -55,14 +57,24 @@ const HeroSection = () => {
                         onClick={handleBlinkClick}
                         onTouchStart={handleBlinkClick}
                     >
-                        <img
-                            src={`/images/blink.gif?t=${timestamp}`}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                            loading="eager"
-                            width="320"
-                            height="320"
-                        />
+                        <div className="relative w-full h-full">
+                            {/* Loading placeholder */}
+                            {!imageLoaded && (
+                                <div className="absolute inset-0 bg-white/10 animate-pulse" />
+                            )}
+
+                            {/* Actual GIF image */}
+                            <img
+                                src={`/images/blink.gif?t=${timestamp}`}
+                                alt="Profile"
+                                className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                loading="eager"
+                                width="320"
+                                height="320"
+                                onLoad={() => setImageLoaded(true)}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
