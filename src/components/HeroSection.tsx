@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SOCIAL_LINKS } from '../data/portfolio';
 
 const HeroSection = () => {
+    const [timestamp, setTimestamp] = useState(Date.now());
+
+    const handleBlinkClick = () => {
+        // Force GIF reload by adding timestamp to prevent caching
+        setTimestamp(Date.now());
+    };
+
     return (
         <section id="hero" className="min-h-[70vh] flex items-center">
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
@@ -43,9 +50,13 @@ const HeroSection = () => {
                 </div>
 
                 <div className="flex justify-center">
-                    <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float">
+                    <div
+                        className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 animate-float cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                        onClick={handleBlinkClick}
+                        onTouchStart={handleBlinkClick}
+                    >
                         <img
-                            src="/images/blink.gif"
+                            src={`/images/blink.gif?t=${timestamp}`}
                             alt="Profile"
                             className="w-full h-full object-cover"
                             loading="eager"
