@@ -53,20 +53,13 @@ const Tools = () => {
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-7 glass-panel p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-6 glass-panel p-1 rounded-lg mb-8">
                         <TabsTrigger
                             value="location"
                             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
                         >
                             <Globe className="w-4 h-4 mr-1" />
                             IP
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="torrent"
-                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
-                        >
-                            <Film className="w-4 h-4 mr-1" />
-                            Stream
                         </TabsTrigger>
                         <TabsTrigger
                             value="calculator"
@@ -107,10 +100,6 @@ const Tools = () => {
 
                     <TabsContent value="location">
                         <IPLocationTool />
-                    </TabsContent>
-
-                    <TabsContent value="torrent">
-                        <TorrentPlayer />
                     </TabsContent>
 
                     <TabsContent value="calculator">
