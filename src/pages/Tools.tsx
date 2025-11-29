@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Globe, Server, Clock, Shield, Activity, DollarSign, Calculator, Film, HardDrive, Hash, Lock, Code, Copy, Check, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap } from 'lucide-react';
+import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface LocationData {
     ip: string;
@@ -13,11 +14,14 @@ interface LocationData {
     postal?: string;
 }
 
+import ThreeBackground from '@/components/ThreeBackground';
+
 const Tools = () => {
     const [activeTab, setActiveTab] = useState('location');
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-mono">
+        <div className="min-h-screen bg-background text-foreground font-mono relative">
+            <ThreeBackground />
             {/* Header/Navigation */}
             <header className="p-6">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -53,7 +57,7 @@ const Tools = () => {
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-6 glass-panel p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-3 glass-panel p-1 rounded-lg mb-8">
                         <TabsTrigger
                             value="location"
                             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
@@ -67,27 +71,6 @@ const Tools = () => {
                         >
                             <Calculator className="w-4 h-4 mr-1" />
                             Cost
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="datasize"
-                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
-                        >
-                            <HardDrive className="w-4 h-4 mr-1" />
-                            Size
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="hash"
-                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
-                        >
-                            <Hash className="w-4 h-4 mr-1" />
-                            Hash
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="base64"
-                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
-                        >
-                            <Code className="w-4 h-4 mr-1" />
-                            Base64
                         </TabsTrigger>
                         <TabsTrigger
                             value="todo"
@@ -104,18 +87,6 @@ const Tools = () => {
 
                     <TabsContent value="calculator">
                         <CostCalculator />
-                    </TabsContent>
-
-                    <TabsContent value="datasize">
-                        <DataSizeConverter />
-                    </TabsContent>
-
-                    <TabsContent value="hash">
-                        <HashGenerator />
-                    </TabsContent>
-
-                    <TabsContent value="base64">
-                        <Base64Tool />
                     </TabsContent>
 
                     <TabsContent value="todo">
@@ -728,356 +699,16 @@ const CostCalculator = () => {
     );
 };
 
-// New Data Size Converter
-const DataSizeConverter = () => {
-    const [value, setValue] = useState<string>('1024');
-    const [unit, setUnit] = useState<string>('MB');
-    const [copied, setCopied] = useState<string>('');
-
-    const units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
-    const multipliers: { [key: string]: number } = {
-        'Bytes': 1,
-        'KB': 1024,
-        'MB': 1024 * 1024,
-        'GB': 1024 * 1024 * 1024,
-        'TB': 1024 * 1024 * 1024 * 1024,
-        'PB': 1024 * 1024 * 1024 * 1024 * 1024
-    };
-
-    const numValue = parseFloat(value) || 0;
-    const bytes = numValue * multipliers[unit];
-
-    const copyToClipboard = (text: string, label: string) => {
-        navigator.clipboard.writeText(text);
-        setCopied(label);
-        setTimeout(() => setCopied(''), 2000);
-    };
-
-    return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="glass-panel rounded-xl p-8">
-                <div className="code-block mb-6">
-                    <div className="text-white/60">
-                        const <span className="text-primary">convertSize</span> = (value, unit) =&gt; {'{'}
-                    </div>
-                    <div className="pl-8 py-2">
-                        <div className="text-fairy-yellow">
-                            // Data size converter for file operations
-                        </div>
-                    </div>
-                    <div className="text-white/60">{'}'}</div>
-                </div>
-
-                {/* Input */}
-                <div className="grid md:grid-cols-2 gap-4 mb-8">
-                    <div>
-                        <label className="text-white/80 text-xs font-mono mb-2 block">VALUE</label>
-                        <input
-                            type="number"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-white/80 text-xs font-mono mb-2 block">UNIT</label>
-                        <select
-                            value={unit}
-                            onChange={(e) => setUnit(e.target.value)}
-                            className="w-full glass-panel rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono"
-                        >
-                            {units.map(u => (
-                                <option key={u} value={u} className="bg-muted">{u}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Results */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {units.map((u, idx) => {
-                        const converted = bytes / multipliers[u];
-                        const colorClasses = [
-                            'border-primary/30 text-primary',
-                            'border-fairy-blue/30 text-fairy-blue',
-                            'border-fairy-teal/30 text-fairy-teal',
-                            'border-fairy-purple/30 text-fairy-purple',
-                            'border-fairy-light-purple/30 text-fairy-light-purple',
-                            'border-secondary/30 text-secondary'
-                        ];
-                        return (
-                            <div key={u} className={`glass-panel rounded-xl p-6 ${colorClasses[idx]} hover:bg-white/10 transition-all group cursor-pointer`}
-                                onClick={() => copyToClipboard(converted.toFixed(2), u)}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-white/60 text-xs font-mono">{u.toUpperCase()}</h3>
-                                    {copied === u ? (
-                                        <Check className="w-4 h-4 text-green-400" />
-                                    ) : (
-                                        <Copy className="w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity" />
-                                    )}
-                                </div>
-                                <p className="text-2xl font-bold font-mono">{converted.toFixed(2)}</p>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="mt-6 glass-panel rounded-xl p-4 border-fairy-yellow/30">
-                    <p className="text-fairy-yellow text-xs font-mono">
-                        <span className="text-white/80">// TIP:</span> Click any value to copy to clipboard
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// New Hash Generator
-const HashGenerator = () => {
-    const [input, setInput] = useState<string>('');
-    const [md5, setMd5] = useState<string>('');
-    const [sha256, setSha256] = useState<string>('');
-    const [copied, setCopied] = useState<string>('');
-
-    useEffect(() => {
-        if (input) {
-            generateHashes();
-        } else {
-            setMd5('');
-            setSha256('');
-        }
-    }, [input]);
-
-    const generateHashes = async () => {
-        if (!input) return;
-
-        const encoder = new TextEncoder();
-        const data = encoder.encode(input);
-
-        // SHA-256
-        const sha256Buffer = await crypto.subtle.digest('SHA-256', data);
-        const sha256Array = Array.from(new Uint8Array(sha256Buffer));
-        const sha256Hex = sha256Array.map(b => b.toString(16).padStart(2, '0')).join('');
-        setSha256(sha256Hex);
-
-        // MD5 is not available in Web Crypto API, using a simple hash instead
-        let hash = 0;
-        for (let i = 0; i < input.length; i++) {
-            const char = input.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        setMd5(Math.abs(hash).toString(16).padStart(32, '0').substring(0, 32));
-    };
-
-    const copyToClipboard = (text: string, label: string) => {
-        navigator.clipboard.writeText(text);
-        setCopied(label);
-        setTimeout(() => setCopied(''), 2000);
-    };
-
-    return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="glass-panel rounded-xl p-8">
-                <div className="code-block mb-6">
-                    <div className="text-white/60">
-                        function <span className="text-primary">generateHash</span>(text) {'{'}
-                    </div>
-                    <div className="pl-8 py-2">
-                        <div className="text-fairy-yellow">
-                            // Generate cryptographic hashes
-                        </div>
-                    </div>
-                    <div className="text-white/60">{'}'}</div>
-                </div>
-
-                {/* Input */}
-                <div className="mb-6">
-                    <label className="text-white/80 text-xs font-mono mb-2 block">INPUT_TEXT</label>
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Enter text to hash..."
-                        rows={4}
-                        className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm resize-none"
-                    />
-                </div>
-
-                {/* Hash Results */}
-                <div className="space-y-4">
-                    <div className="glass-panel rounded-xl p-6 border-primary/30 group">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-primary text-sm font-mono font-bold">SHA-256</h3>
-                            <button
-                                onClick={() => sha256 && copyToClipboard(sha256, 'sha256')}
-                                className="p-2 hover:bg-white/10 rounded transition-all"
-                            >
-                                {copied === 'sha256' ? (
-                                    <Check className="w-4 h-4 text-green-400" />
-                                ) : (
-                                    <Copy className="w-4 h-4 text-white/60" />
-                                )}
-                            </button>
-                        </div>
-                        <p className="text-white/80 font-mono text-xs break-all">
-                            {sha256 || '// Hash will appear here'}
-                        </p>
-                    </div>
-
-                    <div className="glass-panel rounded-xl p-6 border-fairy-blue/30 group">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-fairy-blue text-sm font-mono font-bold">MD5 (Simulated)</h3>
-                            <button
-                                onClick={() => md5 && copyToClipboard(md5, 'md5')}
-                                className="p-2 hover:bg-white/10 rounded transition-all"
-                            >
-                                {copied === 'md5' ? (
-                                    <Check className="w-4 h-4 text-green-400" />
-                                ) : (
-                                    <Copy className="w-4 h-4 text-white/60" />
-                                )}
-                            </button>
-                        </div>
-                        <p className="text-white/80 font-mono text-xs break-all">
-                            {md5 || '// Hash will appear here'}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-6 glass-panel rounded-xl p-4 border-fairy-yellow/30">
-                    <p className="text-fairy-yellow text-xs font-mono leading-relaxed">
-                        <span className="text-white/80">// NOTE:</span> SHA-256 uses Web Crypto API (secure).<br />
-                        MD5 is simulated for demo purposes. For production, use a proper MD5 library.
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// New Base64 Tool
-const Base64Tool = () => {
-    const [input, setInput] = useState<string>('');
-    const [output, setOutput] = useState<string>('');
-    const [mode, setMode] = useState<'encode' | 'decode'>('encode');
-    const [copied, setCopied] = useState(false);
-
-    useEffect(() => {
-        if (!input) {
-            setOutput('');
-            return;
-        }
-
-        try {
-            if (mode === 'encode') {
-                setOutput(btoa(input));
-            } else {
-                setOutput(atob(input));
-            }
-        } catch (error) {
-            setOutput('// Invalid input for decoding');
-        }
-    }, [input, mode]);
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="glass-panel rounded-xl p-8">
-                <div className="code-block mb-6">
-                    <div className="text-white/60">
-                        const <span className="text-primary">base64</span> = {'{'}
-                    </div>
-                    <div className="pl-8 py-2">
-                        <div className="text-fairy-yellow">
-                            // Encode & decode Base64
-                        </div>
-                    </div>
-                    <div className="text-white/60">{'}'}</div>
-                </div>
-
-                {/* Mode Toggle */}
-                <div className="flex gap-4 mb-6">
-                    <button
-                        onClick={() => setMode('encode')}
-                        className={`flex-1 py-3 rounded-lg font-mono text-sm transition-all ${mode === 'encode'
-                            ? 'bg-primary/20 text-primary border-2 border-primary/50'
-                            : 'glass-panel text-white/60 hover:bg-white/10'
-                            }`}
-                    >
-                        ENCODE
-                    </button>
-                    <button
-                        onClick={() => setMode('decode')}
-                        className={`flex-1 py-3 rounded-lg font-mono text-sm transition-all ${mode === 'decode'
-                            ? 'bg-fairy-teal/20 text-fairy-teal border-2 border-fairy-teal/50'
-                            : 'glass-panel text-white/60 hover:bg-white/10'
-                            }`}
-                    >
-                        DECODE
-                    </button>
-                </div>
-
-                {/* Input */}
-                <div className="mb-6">
-                    <label className="text-white/80 text-xs font-mono mb-2 block">
-                        {mode === 'encode' ? 'PLAIN_TEXT' : 'BASE64_TEXT'}
-                    </label>
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder={mode === 'encode' ? 'Enter text to encode...' : 'Enter Base64 to decode...'}
-                        rows={6}
-                        className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm resize-none"
-                    />
-                </div>
-
-                {/* Output */}
-                <div>
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="text-white/80 text-xs font-mono">
-                            {mode === 'encode' ? 'BASE64_OUTPUT' : 'DECODED_OUTPUT'}
-                        </label>
-                        <button
-                            onClick={copyToClipboard}
-                            disabled={!output}
-                            className="p-2 hover:bg-white/10 rounded transition-all disabled:opacity-30"
-                        >
-                            {copied ? (
-                                <Check className="w-4 h-4 text-green-400" />
-                            ) : (
-                                <Copy className="w-4 h-4 text-white/60" />
-                            )}
-                        </button>
-                    </div>
-                    <div className="glass-panel rounded-lg px-4 py-3 min-h-[150px] border-primary/30">
-                        <p className="text-white/80 font-mono text-sm break-all whitespace-pre-wrap">
-                            {output || '// Output will appear here'}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-6 glass-panel rounded-xl p-4 border-fairy-blue/30">
-                    <p className="text-fairy-blue text-xs font-mono">
-                        <span className="text-fairy-yellow">TIP:</span> Base64 is commonly used for encoding binary data in text format
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 interface Todo {
     id: string;
     text: string;
     completed: boolean;
     dueDate: string | null;
+    priority: 'low' | 'medium' | 'high';
+    category: 'personal' | 'work' | 'urgent' | 'other';
     createdAt: number;
+    updatedAt?: number;
 }
 
 const TodoList = () => {
@@ -1087,7 +718,13 @@ const TodoList = () => {
     });
     const [inputValue, setInputValue] = useState('');
     const [dueDate, setDueDate] = useState('');
-    const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+    const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+    const [category, setCategory] = useState<'personal' | 'work' | 'urgent' | 'other'>('personal');
+    const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'high' | 'work'>('all');
+
+    // Edit state
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState('');
 
     useEffect(() => {
         localStorage.setItem('fairyfloss-todos', JSON.stringify(todos));
@@ -1101,12 +738,15 @@ const TodoList = () => {
             text: inputValue.trim(),
             completed: false,
             dueDate: dueDate || null,
+            priority,
+            category,
             createdAt: Date.now()
         };
 
         setTodos([newTodo, ...todos]);
         setInputValue('');
         setDueDate('');
+        setPriority('medium');
     };
 
     const toggleTodo = (id: string) => {
@@ -1117,6 +757,24 @@ const TodoList = () => {
 
     const deleteTodo = (id: string) => {
         setTodos(todos.filter(todo => todo.id !== id));
+    };
+
+    const startEditing = (todo: Todo) => {
+        setEditingId(todo.id);
+        setEditValue(todo.text);
+    };
+
+    const saveEdit = (id: string) => {
+        if (!editValue.trim()) return;
+        setTodos(todos.map(todo =>
+            todo.id === id ? { ...todo, text: editValue.trim(), updatedAt: Date.now() } : todo
+        ));
+        setEditingId(null);
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditValue('');
     };
 
     const isOverdue = (dateStr: string | null) => {
@@ -1130,8 +788,28 @@ const TodoList = () => {
     const filteredTodos = todos.filter(todo => {
         if (filter === 'active') return !todo.completed;
         if (filter === 'completed') return todo.completed;
+        if (filter === 'high') return todo.priority === 'high';
+        if (filter === 'work') return todo.category === 'work';
         return true;
     });
+
+    const getPriorityColor = (p: string) => {
+        switch (p) {
+            case 'high': return 'text-destructive border-destructive/50 bg-destructive/10';
+            case 'medium': return 'text-fairy-yellow border-fairy-yellow/50 bg-fairy-yellow/10';
+            case 'low': return 'text-fairy-blue border-fairy-blue/50 bg-fairy-blue/10';
+            default: return 'text-white/50 border-white/20';
+        }
+    };
+
+    const getCategoryColor = (c: string) => {
+        switch (c) {
+            case 'work': return 'text-fairy-purple';
+            case 'personal': return 'text-fairy-teal';
+            case 'urgent': return 'text-destructive';
+            default: return 'text-white/60';
+        }
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -1142,30 +820,22 @@ const TodoList = () => {
                     </div>
                     <div className="pl-8 py-2">
                         <div className="text-fairy-yellow">
-                            // Persistent tasks with reminders
+                            // Smart tasks with priority & categories
                         </div>
                     </div>
                     <div className="text-white/60">{'}'}</div>
                 </div>
 
                 {/* Add Todo Input */}
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <div className="flex-1">
+                <div className="flex flex-col gap-4 mb-8">
+                    <div className="flex gap-2">
                         <input
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && addTodo()}
                             placeholder="Add a new task..."
-                            className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm"
-                        />
-                    </div>
-                    <div className="flex gap-2">
-                        <input
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="glass-panel rounded-lg px-4 py-3 text-white/80 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm bg-transparent"
+                            className="flex-1 glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm"
                         />
                         <button
                             onClick={addTodo}
@@ -1176,11 +846,43 @@ const TodoList = () => {
                             ADD
                         </button>
                     </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        <input
+                            type="date"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                            className="glass-panel rounded-lg px-3 py-2 text-white/80 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-xs bg-transparent"
+                        />
+
+                        <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
+                            <SelectTrigger className="w-[140px] glass-panel border-0 text-white/80 h-[38px]">
+                                <SelectValue placeholder="Priority" />
+                            </SelectTrigger>
+                            <SelectContent className="glass-panel border-white/10 bg-[#1a1b26] text-white">
+                                <SelectItem value="low">Low Priority</SelectItem>
+                                <SelectItem value="medium">Medium Priority</SelectItem>
+                                <SelectItem value="high">High Priority</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={category} onValueChange={(value: any) => setCategory(value)}>
+                            <SelectTrigger className="w-[140px] glass-panel border-0 text-white/80 h-[38px]">
+                                <SelectValue placeholder="Category" />
+                            </SelectTrigger>
+                            <SelectContent className="glass-panel border-white/10 bg-[#1a1b26] text-white">
+                                <SelectItem value="personal">Personal</SelectItem>
+                                <SelectItem value="work">Work</SelectItem>
+                                <SelectItem value="urgent">Urgent</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {/* Filters */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {(['all', 'active', 'completed'] as const).map((f) => (
+                    {(['all', 'active', 'completed', 'high', 'work'] as const).map((f) => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
@@ -1221,30 +923,70 @@ const TodoList = () => {
                                 </button>
 
                                 <div className="flex-1 min-w-0">
-                                    <p className={`font-mono text-sm truncate transition-all ${todo.completed ? 'text-white/40 line-through' : 'text-white/90'
-                                        }`}>
-                                        {todo.text}
-                                    </p>
-                                    {todo.dueDate && (
-                                        <div className={`flex items-center gap-1 text-xs mt-1 font-mono ${!todo.completed && isOverdue(todo.dueDate)
-                                            ? 'text-destructive animate-pulse'
-                                            : 'text-white/40'
-                                            }`}>
-                                            <Calendar className="w-3 h-3" />
-                                            <span>
-                                                {new Date(todo.dueDate).toLocaleDateString()}
-                                                {!todo.completed && isOverdue(todo.dueDate) && ' (Overdue)'}
-                                            </span>
+                                    {editingId === todo.id ? (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={editValue}
+                                                onChange={(e) => setEditValue(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && saveEdit(todo.id)}
+                                                className="flex-1 bg-white/5 rounded px-2 py-1 text-white font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                                autoFocus
+                                            />
+                                            <button onClick={() => saveEdit(todo.id)} className="text-green-400 hover:text-green-300"><Save className="w-4 h-4" /></button>
+                                            <button onClick={cancelEdit} className="text-destructive hover:text-red-400"><X className="w-4 h-4" /></button>
                                         </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <p className={`font-mono text-sm truncate transition-all ${todo.completed ? 'text-white/40 line-through' : 'text-white/90'
+                                                    }`}>
+                                                    {todo.text}
+                                                </p>
+                                                {todo.priority && (
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${getPriorityColor(todo.priority)} uppercase font-bold`}>
+                                                        {todo.priority}
+                                                    </span>
+                                                )}
+                                                {todo.category && (
+                                                    <span className={`text-[10px] flex items-center gap-1 ${getCategoryColor(todo.category)}`}>
+                                                        <Tag className="w-3 h-3" /> {todo.category}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
+                                                {todo.dueDate && (
+                                                    <div className={`flex items-center gap-1 ${!todo.completed && isOverdue(todo.dueDate)
+                                                        ? 'text-destructive animate-pulse'
+                                                        : ''
+                                                        }`}>
+                                                        <Calendar className="w-3 h-3" />
+                                                        <span>
+                                                            {new Date(todo.dueDate).toLocaleDateString()}
+                                                            {!todo.completed && isOverdue(todo.dueDate) && ' (Overdue)'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
                                     )}
                                 </div>
 
-                                <button
-                                    onClick={() => deleteTodo(todo.id)}
-                                    className="p-2 text-white/20 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => startEditing(todo)}
+                                        className="p-2 text-white/40 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                    >
+                                        <Pencil className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteTodo(todo.id)}
+                                        className="p-2 text-white/40 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ))
                     )}
