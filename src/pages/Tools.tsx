@@ -227,28 +227,18 @@ const IPLocationTool = () => {
                     <Activity className="w-32 h-32 text-primary" />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <Globe className="w-5 h-5 text-primary" />
-                            <h3 className="text-white/60 text-xs font-mono tracking-wider">GLOBAL_IP</h3>
-                        </div>
-                        <p className="text-4xl font-bold text-white font-mono tracking-tight">{locationData.ip}</p>
-                        <p className="text-primary/60 text-sm mt-2 font-mono">{locationData.org}</p>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-3">
+                        <Globe className="w-5 h-5 text-primary" />
+                        <h3 className="text-white/60 text-xs font-mono tracking-wider">GLOBAL_IP</h3>
                     </div>
-
-                    <div className="md:border-l md:border-white/10 md:pl-8">
-                        <div className="flex items-center gap-3 mb-2">
-                            <Wifi className="w-5 h-5 text-fairy-teal" />
-                            <h3 className="text-white/60 text-xs font-mono tracking-wider">LOCAL_IP</h3>
-                        </div>
-                        <p className="text-3xl font-bold text-white/90 font-mono tracking-tight">{localIp}</p>
-                        <div className="flex items-center gap-2 mt-3">
-                            <div className={`w-2 h-2 rounded-full ${ping && ping < 100 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                            <p className="text-white/40 text-xs font-mono">
-                                Connection Status: <span className="text-white/80">Active</span>
-                            </p>
-                        </div>
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-mono tracking-tight break-all">{locationData.ip}</p>
+                    <p className="text-primary/60 text-xs sm:text-sm mt-2 font-mono break-words">{locationData.org}</p>
+                    <div className="flex items-center gap-2 mt-4">
+                        <div className={`w-2 h-2 rounded-full ${ping && ping < 100 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                        <p className="text-white/40 text-xs font-mono">
+                            Connection Status: <span className="text-white/80">Active</span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -322,22 +312,18 @@ const IPLocationTool = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                         <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                            <span className="text-white/40 text-sm font-mono">Coordinates</span>
-                            <span className="text-white/80 text-sm font-mono">{locationData.loc}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
                             <span className="text-white/40 text-sm font-mono">ISP Organization</span>
                             <span className="text-white/80 text-sm font-mono truncate max-w-[200px]">{locationData.org}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                            <span className="text-white/40 text-sm font-mono">Data Center</span>
+                            <span className="text-white/80 text-sm font-mono">{locationData.org.includes('Cloud') || locationData.org.includes('Amazon') ? 'Yes' : 'No'}</span>
                         </div>
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center border-b border-white/5 pb-2">
                             <span className="text-white/40 text-sm font-mono">Operating System</span>
                             <span className="text-white/80 text-sm font-mono">{os}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                            <span className="text-white/40 text-sm font-mono">Data Center</span>
-                            <span className="text-white/80 text-sm font-mono">{locationData.org.includes('Cloud') || locationData.org.includes('Amazon') ? 'Yes' : 'No'}</span>
                         </div>
                     </div>
                 </div>
@@ -346,6 +332,172 @@ const IPLocationTool = () => {
     );
 };
 
+
+// Investment Calculator Component
+const InvestmentCalculator = ({ suggestedAmount }: { suggestedAmount?: number }) => {
+    const [yearlyInvestment, setYearlyInvestment] = useState<string>('50000');
+    const [interestRate, setInterestRate] = useState<string>('14');
+
+    // Auto-update when suggested amount changes
+    useEffect(() => {
+        if (suggestedAmount && suggestedAmount > 0) {
+            setYearlyInvestment(Math.round(suggestedAmount).toString());
+        }
+    }, [suggestedAmount]);
+
+    const calculateCompoundInterest = (principal: number, rate: number, years: number) => {
+        // For recurring yearly investments, we need to calculate the future value of an annuity
+        // FV = P × [((1 + r)^n - 1) / r]
+        const r = rate / 100;
+        const amount = principal * (((Math.pow(1 + r, years) - 1) / r) * (1 + r));
+        const invested = principal * years;
+        const returns = amount - invested;
+
+        return {
+            amount: Math.round(amount),
+            invested: Math.round(invested),
+            returns: Math.round(returns)
+        };
+    };
+
+    const numInvestment = parseFloat(yearlyInvestment) || 0;
+    const numRate = parseFloat(interestRate) || 0;
+
+    const year1 = calculateCompoundInterest(numInvestment, numRate, 1);
+    const year5 = calculateCompoundInterest(numInvestment, numRate, 5);
+    const year10 = calculateCompoundInterest(numInvestment, numRate, 10);
+
+    return (
+        <div className="glass-panel rounded-xl p-8 mt-8 border-t-2 border-primary/20">
+            <div className="code-block mb-6">
+                <div className="text-white/60">
+                    function <span className="text-fairy-teal">calculateInvestment</span>(amount, rate) {'{'}
+                </div>
+                <div className="pl-8 py-2">
+                    <div className="text-fairy-yellow">
+                        // Compound interest with yearly investments
+                    </div>
+                    <div className="text-white/60">
+                        return {'{'}futureValue{'}'}
+                    </div>
+                </div>
+                <div className="text-white/60">{'}'}</div>
+            </div>
+
+            <h3 className="text-fairy-teal font-mono font-bold mb-6 text-lg flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                INVESTMENT_CALCULATOR
+            </h3>
+
+            {/* Input Fields */}
+            <div className="grid md:grid-cols-2 gap-4 mb-8">
+                <div>
+                    <label className="text-white/80 text-xs font-mono mb-2 block">
+                        YEARLY_INVESTMENT_₹ {suggestedAmount && suggestedAmount > 0 && <span className="text-fairy-yellow text-[10px]">(Auto from Cost Calc)</span>}
+                    </label>
+                    <input
+                        type="number"
+                        value={yearlyInvestment}
+                        onChange={(e) => setYearlyInvestment(e.target.value)}
+                        placeholder="50000"
+                        className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fairy-teal transition-all font-mono"
+                    />
+                </div>
+
+                <div>
+                    <label className="text-white/80 text-xs font-mono mb-2 block">
+                        INTEREST_RATE_%
+                    </label>
+                    <input
+                        type="number"
+                        value={interestRate}
+                        onChange={(e) => setInterestRate(e.target.value)}
+                        placeholder="14"
+                        step="0.1"
+                        className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fairy-teal transition-all font-mono"
+                    />
+                </div>
+            </div>
+
+            {/* Results Grid */}
+            <div className="grid md:grid-cols-3 gap-6">
+                {/* 1 Year */}
+                <div className="glass-panel rounded-xl p-6 border-fairy-purple/50 hover:bg-white/5 transition-all">
+                    <h4 className="text-fairy-purple font-mono font-bold mb-4 text-lg flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        1_YEAR
+                    </h4>
+                    <div className="space-y-3">
+                        <div>
+                            <p className="text-white/60 text-xs font-mono mb-1">Total Value</p>
+                            <p className="text-3xl text-white font-mono font-bold">₹{year1.amount.toLocaleString()}</p>
+                        </div>
+                        <div className="pt-3 border-t border-white/10">
+                            <p className="text-white/60 text-xs font-mono mb-1">Invested</p>
+                            <p className="text-sm text-white/80 font-mono">₹{year1.invested.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-white/60 text-xs font-mono mb-1">Returns</p>
+                            <p className="text-lg text-fairy-teal font-mono font-bold">+₹{year1.returns.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 5 Years */}
+                <div className="glass-panel rounded-xl p-6 border-fairy-teal/50 hover:bg-white/5 transition-all">
+                    <h4 className="text-fairy-teal font-mono font-bold mb-4 text-lg flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        5_YEARS
+                    </h4>
+                    <div className="space-y-3">
+                        <div>
+                            <p className="text-white/60 text-xs font-mono mb-1">Total Value</p>
+                            <p className="text-3xl text-white font-mono font-bold">₹{year5.amount.toLocaleString()}</p>
+                        </div>
+                        <div className="pt-3 border-t border-white/10">
+                            <p className="text-white/60 text-xs font-mono mb-1">Invested</p>
+                            <p className="text-sm text-white/80 font-mono">₹{year5.invested.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-white/60 text-xs font-mono mb-1">Returns</p>
+                            <p className="text-lg text-fairy-teal font-mono font-bold">+₹{year5.returns.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 10 Years */}
+                <div className="glass-panel rounded-xl p-6 border-primary/50 hover:bg-white/5 transition-all ring-2 ring-primary/20">
+                    <h4 className="text-primary font-mono font-bold mb-4 text-lg flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        10_YEARS ⭐
+                    </h4>
+                    <div className="space-y-3">
+                        <div>
+                            <p className="text-white/60 text-xs font-mono mb-1">Total Value</p>
+                            <p className="text-3xl text-white font-mono font-bold">₹{year10.amount.toLocaleString()}</p>
+                        </div>
+                        <div className="pt-3 border-t border-white/10">
+                            <p className="text-white/60 text-xs font-mono mb-1">Invested</p>
+                            <p className="text-sm text-white/80 font-mono">₹{year10.invested.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-white/60 text-xs font-mono mb-1">Returns</p>
+                            <p className="text-lg text-primary font-mono font-bold">+₹{year10.returns.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Info Note */}
+            <div className="mt-6 glass-panel rounded-xl p-4 border-fairy-yellow/30">
+                <p className="text-fairy-yellow text-xs font-mono leading-relaxed">
+                    <span className="text-white/80">// NOTE:</span> This calculator uses compound interest with yearly recurring investments.
+                    <br />Returns are calculated using the future value of an annuity formula: FV = P × [((1 + r)^n - 1) / r] × (1 + r)
+                </p>
+            </div>
+        </div>
+    );
+};
 
 // Enhanced Cost Calculator Component
 const CostCalculator = () => {
@@ -381,6 +533,9 @@ const CostCalculator = () => {
     const rates1 = calculateRates(days, price);
     const rates2 = calculateRates(days2, price2);
     const savings = rates1.perDay - rates2.perDay;
+
+    // Use the primary plan's per year value for investment calculator
+    const yearlyAmount = rates1.perYear;
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -565,6 +720,9 @@ const CostCalculator = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Investment Calculator Section */}
+                <InvestmentCalculator suggestedAmount={yearlyAmount} />
             </div>
         </div>
     );
