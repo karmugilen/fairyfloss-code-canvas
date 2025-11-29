@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save, Brain, RotateCcw, ChevronRight, ChevronLeft, Eye, EyeOff, Layers } from 'lucide-react';
+import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save, Brain, RotateCcw, ChevronRight, ChevronLeft, Eye, EyeOff, Layers, Play, Pause, Timer, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -98,7 +98,7 @@ const Tools = () => {
                     </TabsContent>
 
                     <TabsContent value="memory">
-                        <MemoryPalaceTool />
+                        <CardMemorizer />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -705,83 +705,149 @@ const CostCalculator = () => {
 };
 
 
-// Memory Palace Tool
-const MemoryPalaceTool = () => {
+// Card Memorizer Tool
+const CardMemorizer = () => {
     const [mode, setMode] = useState<'setup' | 'memorize' | 'recall'>('setup');
     const [deck, setDeck] = useState<string[]>([]);
-    const [loci, setLoci] = useState<string[]>(() => {
-        const saved = localStorage.getItem('fairyfloss-loci');
-        return saved ? JSON.parse(saved) : ['Front Door', 'Living Room', 'Kitchen', 'Hallway', 'Bathroom', 'Bedroom'];
-    });
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showCard, setShowCard] = useState(false);
-    const [newLocus, setNewLocus] = useState('');
 
-    const suits = ['♠', '♥', '♣', '♦'];
+    // Settings
+    const [selectedSuits, setSelectedSuits] = useState<string[]>(['♠', '♥', '♣', '♦']);
+    const [includeJokers, setIncludeJokers] = useState(false);
+    const [enableTimer, setEnableTimer] = useState(true);
+
+    // Timer
+    const [timer, setTimer] = useState(0);
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+    const suits = [
+        { symbol: '♠', name: 'Spades', color: 'text-white' },
+        { symbol: '♥', name: 'Hearts', color: 'text-destructive' },
+        { symbol: '♣', name: 'Clubs', color: 'text-white' },
+        { symbol: '♦', name: 'Diamonds', color: 'text-destructive' }
+    ];
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
     useEffect(() => {
-        localStorage.setItem('fairyfloss-loci', JSON.stringify(loci));
-    }, [loci]);
+        let interval: NodeJS.Timeout;
+        if (isTimerRunning) {
+            interval = setInterval(() => {
+                setTimer(prev => prev + 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isTimerRunning]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const toggleSuit = (symbol: string) => {
+        if (selectedSuits.includes(symbol)) {
+            setSelectedSuits(selectedSuits.filter(s => s !== symbol));
+        } else {
+            setSelectedSuits([...selectedSuits, symbol]);
+        }
+    };
 
     const generateDeck = () => {
         const newDeck: string[] = [];
-        for (const s of suits) {
+        // Add standard cards
+        for (const s of selectedSuits) {
             for (const v of values) {
                 newDeck.push(`${v}${s}`);
             }
+        }
+        // Add Jokers
+        if (includeJokers) {
+            newDeck.push('JOKER 1');
+            newDeck.push('JOKER 2');
         }
         return newDeck;
     };
 
     const shuffleDeck = () => {
         const newDeck = generateDeck();
+        if (newDeck.length === 0) return;
+
         for (let i = newDeck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
         }
         setDeck(newDeck);
         setCurrentIndex(0);
-    };
-
-    const addLocus = () => {
-        if (newLocus.trim()) {
-            setLoci([...loci, newLocus.trim()]);
-            setNewLocus('');
-        }
-    };
-
-    const removeLocus = (index: number) => {
-        setLoci(loci.filter((_, i) => i !== index));
+        setTimer(0);
+        setIsTimerRunning(false);
     };
 
     const startMemorization = () => {
         if (deck.length === 0) shuffleDeck();
         setMode('memorize');
         setCurrentIndex(0);
+        setTimer(0);
+        if (enableTimer) setIsTimerRunning(true);
     };
 
     const startRecall = () => {
         setMode('recall');
         setCurrentIndex(0);
         setShowCard(false);
+        // Reset timer for recall phase if desired, or keep running total
+        // For now, let's restart it to track recall time separately
+        setTimer(0);
+        if (enableTimer) setIsTimerRunning(true);
+    };
+
+    const stopSession = () => {
+        setIsTimerRunning(false);
+        setMode('setup');
     };
 
     const nextStep = () => {
-        if (currentIndex < Math.min(deck.length, loci.length) - 1) {
+        if (currentIndex < deck.length - 1) {
             setCurrentIndex(currentIndex + 1);
-            setShowCard(false);
+            // In recall mode, subsequent cards are automatically revealed
+            if (mode === 'recall') {
+                setShowCard(true);
+            } else {
+                setShowCard(false);
+            }
+        } else {
+            // End of deck
+            setIsTimerRunning(false);
         }
     };
 
     const prevStep = () => {
         if (currentIndex > 0) {
             setCurrentIndex(currentIndex - 1);
-            setShowCard(false);
+            // When going back, we probably want to show the card?
+            // Or keep current state? Let's default to showing it in recall mode for ease
+            if (mode === 'recall') {
+                setShowCard(true);
+            } else {
+                setShowCard(false);
+            }
+        }
+    };
+
+    const handleCardClick = () => {
+        if (mode === 'memorize') {
+            nextStep();
+        } else if (mode === 'recall') {
+            if (!showCard) {
+                setShowCard(true);
+            } else {
+                nextStep();
+            }
         }
     };
 
     const getCardColor = (card: string) => {
+        if (card.includes('JOKER')) return 'text-fairy-purple';
         return card.includes('♥') || card.includes('♦') ? 'text-destructive' : 'text-white';
     };
 
@@ -790,161 +856,210 @@ const MemoryPalaceTool = () => {
             <div className="glass-panel rounded-xl p-8">
                 <div className="code-block mb-6">
                     <div className="text-white/60">
-                        const <span className="text-primary">mindPalace</span> = {'{'}
+                        const <span className="text-primary">cardMemorizer</span> = {'{'}
                     </div>
                     <div className="pl-8 py-2">
                         <div className="text-fairy-yellow">
-                            // Method of Loci for card memorization
+                            // Master the deck
                         </div>
                     </div>
                     <div className="text-white/60">{'}'}</div>
                 </div>
 
-                {/* Navigation / Controls */}
+                {/* Header / Timer */}
                 <div className="flex justify-between items-center mb-8">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setMode('setup')}
-                            className={`px-4 py-2 rounded-lg font-mono text-xs transition-all ${mode === 'setup' ? 'bg-primary/20 text-primary' : 'text-white/40 hover:text-white'}`}
-                        >
-                            SETUP
-                        </button>
-                        <button
-                            onClick={startMemorization}
-                            className={`px-4 py-2 rounded-lg font-mono text-xs transition-all ${mode === 'memorize' ? 'bg-primary/20 text-primary' : 'text-white/40 hover:text-white'}`}
-                        >
-                            MEMORIZE
-                        </button>
-                        <button
-                            onClick={startRecall}
-                            className={`px-4 py-2 rounded-lg font-mono text-xs transition-all ${mode === 'recall' ? 'bg-primary/20 text-primary' : 'text-white/40 hover:text-white'}`}
-                        >
-                            RECALL
-                        </button>
+                    <div className="flex items-center gap-4">
+                        {mode !== 'setup' && (
+                            <button
+                                onClick={stopSession}
+                                className="text-white/40 hover:text-white transition-colors flex items-center gap-2 text-xs font-mono"
+                            >
+                                <Settings className="w-4 h-4" /> CONFIG
+                            </button>
+                        )}
                     </div>
-                    {mode !== 'setup' && (
-                        <div className="text-white/40 font-mono text-xs">
-                            {currentIndex + 1} / {Math.min(deck.length, loci.length)}
+
+                    {enableTimer && mode !== 'setup' && (
+                        <div className="glass-panel px-4 py-2 rounded-lg flex items-center gap-3">
+                            <Timer className={`w-4 h-4 ${isTimerRunning ? 'text-primary animate-pulse' : 'text-white/40'}`} />
+                            <span className="font-mono text-xl font-bold text-white">{formatTime(timer)}</span>
+                            <button
+                                onClick={() => setIsTimerRunning(!isTimerRunning)}
+                                className="text-white/40 hover:text-white ml-2"
+                            >
+                                {isTimerRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                            </button>
                         </div>
                     )}
                 </div>
 
                 {mode === 'setup' && (
                     <div className="space-y-8">
-                        {/* Deck Control */}
+                        {/* Suit Selection */}
                         <div className="glass-panel rounded-xl p-6 border-white/5">
                             <h3 className="text-white/60 text-xs font-mono mb-4 uppercase tracking-wider flex items-center gap-2">
-                                <Layers className="w-4 h-4" /> Deck
+                                <Layers className="w-4 h-4" /> Suits
                             </h3>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={shuffleDeck}
-                                    className="px-6 py-3 bg-primary/20 hover:bg-primary/30 rounded-lg text-primary font-mono text-sm transition-all flex items-center gap-2"
-                                >
-                                    <RotateCcw className="w-4 h-4" />
-                                    SHUFFLE_DECK
-                                </button>
-                                <span className="text-white/40 font-mono text-xs">
-                                    {deck.length > 0 ? 'Deck Ready' : 'No Deck Generated'}
-                                </span>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {suits.map((suit) => (
+                                    <button
+                                        key={suit.symbol}
+                                        onClick={() => toggleSuit(suit.symbol)}
+                                        className={`p-4 rounded-lg border transition-all flex flex-col items-center gap-2 ${selectedSuits.includes(suit.symbol)
+                                            ? 'bg-primary/10 border-primary/50 text-white'
+                                            : 'bg-white/5 border-transparent text-white/40 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        <span className={`text-2xl ${suit.color}`}>{suit.symbol}</span>
+                                        <span className="text-xs font-mono uppercase">{suit.name}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Loci Control */}
+                        {/* Options */}
                         <div className="glass-panel rounded-xl p-6 border-white/5">
                             <h3 className="text-white/60 text-xs font-mono mb-4 uppercase tracking-wider flex items-center gap-2">
-                                <MapPin className="w-4 h-4" /> Loci (Locations)
+                                <Settings className="w-4 h-4" /> Options
                             </h3>
-                            <div className="flex gap-2 mb-4">
-                                <input
-                                    type="text"
-                                    value={newLocus}
-                                    onChange={(e) => setNewLocus(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && addLocus()}
-                                    placeholder="Add new location..."
-                                    className="flex-1 glass-panel rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm"
-                                />
-                                <button
-                                    onClick={addLocus}
-                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
-                                {loci.map((locus, idx) => (
-                                    <div key={idx} className="flex justify-between items-center p-3 glass-panel rounded-lg group">
-                                        <span className="text-white/80 font-mono text-sm">
-                                            <span className="text-primary/50 mr-2">{idx + 1}.</span>
-                                            {locus}
-                                        </span>
-                                        <button
-                                            onClick={() => removeLocus(idx)}
-                                            className="text-white/20 hover:text-destructive transition-all opacity-0 group-hover:opacity-100"
-                                        >
-                                            <Trash2 className="w-3 h-3" />
-                                        </button>
+                            <div className="flex flex-col gap-4">
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${includeJokers ? 'bg-primary border-primary' : 'border-white/20 group-hover:border-white/40'
+                                        }`}>
+                                        {includeJokers && <Check className="w-3 h-3 text-black" />}
                                     </div>
-                                ))}
+                                    <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={includeJokers}
+                                        onChange={(e) => setIncludeJokers(e.target.checked)}
+                                    />
+                                    <span className="text-white/80 font-mono text-sm">Include Jokers (2)</span>
+                                </label>
+
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${enableTimer ? 'bg-primary border-primary' : 'border-white/20 group-hover:border-white/40'
+                                        }`}>
+                                        {enableTimer && <Check className="w-3 h-3 text-black" />}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={enableTimer}
+                                        onChange={(e) => setEnableTimer(e.target.checked)}
+                                    />
+                                    <span className="text-white/80 font-mono text-sm">Enable Timer</span>
+                                </label>
                             </div>
+                        </div>
+
+                        {/* Action */}
+                        <div className="flex justify-center">
+                            <button
+                                onClick={startMemorization}
+                                disabled={selectedSuits.length === 0}
+                                className="px-8 py-4 bg-primary hover:bg-primary/90 rounded-xl text-black font-bold font-mono tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                            >
+                                <Brain className="w-5 h-5" />
+                                START MEMORIZING
+                            </button>
                         </div>
                     </div>
                 )}
 
                 {(mode === 'memorize' || mode === 'recall') && (
                     <div className="space-y-8">
-                        <div className="grid md:grid-cols-2 gap-8 items-center">
-                            {/* Locus Card */}
-                            <div className="glass-panel rounded-2xl p-8 border-primary/20 flex flex-col items-center justify-center min-h-[200px] text-center">
-                                <MapPin className="w-8 h-8 text-primary mb-4 opacity-50" />
-                                <h3 className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">LOCATION</h3>
-                                <p className="text-2xl md:text-3xl font-bold text-white font-mono break-words max-w-full">
-                                    {loci[currentIndex] || 'End of Path'}
-                                </p>
-                            </div>
+                        {/* Card Display */}
+                        <div className="flex justify-center">
+                            <div className="relative w-64 h-96 perspective-1000">
+                                <div
+                                    onClick={handleCardClick}
+                                    className={`w-full h-full glass-panel rounded-2xl border-2 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${mode === 'recall' && !showCard
+                                        ? 'bg-white/5 border-white/10'
+                                        : 'bg-black/40 border-primary/20'
+                                        }`}
+                                >
 
-                            {/* Playing Card */}
-                            <div className="glass-panel rounded-2xl p-8 border-fairy-purple/20 flex flex-col items-center justify-center min-h-[200px] text-center relative overflow-hidden">
-                                {mode === 'recall' && !showCard ? (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm z-10 cursor-pointer" onClick={() => setShowCard(true)}>
-                                        <div className="flex flex-col items-center gap-2 text-white/40 hover:text-white transition-all">
-                                            <Eye className="w-8 h-8" />
-                                            <span className="font-mono text-xs">REVEAL</span>
+                                    {mode === 'recall' && !showCard ? (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center group">
+                                            <Eye className="w-12 h-12 text-white/20 group-hover:text-primary transition-all mb-4" />
+                                            <span className="font-mono text-sm text-white/40 group-hover:text-white">TAP TO REVEAL</span>
                                         </div>
-                                    </div>
-                                ) : null}
+                                    ) : (
+                                        <>
+                                            {/* Top Corner */}
+                                            <div className="absolute top-4 left-4 flex flex-col items-center">
+                                                <span className={`text-2xl font-bold font-mono ${getCardColor(deck[currentIndex])}`}>
+                                                    {deck[currentIndex].replace(/[♠♥♣♦]/, '')}
+                                                </span>
+                                                <span className={`text-2xl ${getCardColor(deck[currentIndex])}`}>
+                                                    {deck[currentIndex].match(/[♠♥♣♦]/)}
+                                                </span>
+                                            </div>
 
-                                <Layers className="w-8 h-8 text-fairy-purple mb-4 opacity-50" />
-                                <h3 className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">CARD</h3>
-                                {deck[currentIndex] ? (
-                                    <p className={`text-5xl md:text-6xl font-bold font-mono ${getCardColor(deck[currentIndex])}`}>
-                                        {deck[currentIndex]}
-                                    </p>
-                                ) : (
-                                    <p className="text-white/40 font-mono">End of Deck</p>
-                                )}
+                                            {/* Center */}
+                                            <div className={`text-6xl md:text-8xl font-bold font-mono ${getCardColor(deck[currentIndex])}`}>
+                                                {deck[currentIndex]}
+                                            </div>
+
+                                            {/* Bottom Corner */}
+                                            <div className="absolute bottom-4 right-4 flex flex-col items-center rotate-180">
+                                                <span className={`text-2xl font-bold font-mono ${getCardColor(deck[currentIndex])}`}>
+                                                    {deck[currentIndex].replace(/[♠♥♣♦]/, '')}
+                                                </span>
+                                                <span className={`text-2xl ${getCardColor(deck[currentIndex])}`}>
+                                                    {deck[currentIndex].match(/[♠♥♣♦]/)}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Progress */}
+                        <div className="text-center">
+                            <p className="text-white/40 font-mono text-xs mb-2">
+                                CARD {currentIndex + 1} / {deck.length}
+                            </p>
+                            <div className="w-full max-w-md mx-auto h-1 bg-white/10 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-primary transition-all duration-300"
+                                    style={{ width: `${((currentIndex + 1) / deck.length) * 100}%` }}
+                                />
                             </div>
                         </div>
 
                         {/* Controls */}
                         <div className="flex justify-center items-center gap-8">
                             <button
-                                onClick={prevStep}
+                                onClick={(e) => { e.stopPropagation(); prevStep(); }}
                                 disabled={currentIndex === 0}
                                 className="p-4 rounded-full glass-panel hover:bg-white/10 disabled:opacity-30 transition-all"
                             >
                                 <ChevronLeft className="w-6 h-6 text-white" />
                             </button>
 
-                            <div className="text-center">
-                                <p className="text-white/40 font-mono text-xs mb-1">
-                                    {mode === 'memorize' ? 'Visualize connection' : 'Recall then reveal'}
-                                </p>
-                            </div>
+                            {mode === 'memorize' ? (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); startRecall(); }}
+                                    className="px-8 py-3 bg-primary/20 hover:bg-primary/30 rounded-lg text-primary font-mono text-sm transition-all flex items-center gap-2"
+                                >
+                                    <Brain className="w-4 h-4" />
+                                    START RECALL
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); nextStep(); }}
+                                    className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-mono text-sm transition-all"
+                                >
+                                    NEXT CARD
+                                </button>
+                            )}
 
                             <button
-                                onClick={nextStep}
-                                disabled={currentIndex >= Math.min(deck.length, loci.length) - 1}
+                                onClick={(e) => { e.stopPropagation(); nextStep(); }}
+                                disabled={currentIndex >= deck.length - 1}
                                 className="p-4 rounded-full glass-panel hover:bg-white/10 disabled:opacity-30 transition-all"
                             >
                                 <ChevronRight className="w-6 h-6 text-white" />
@@ -961,8 +1076,6 @@ interface Todo {
     id: string;
     text: string;
     completed: boolean;
-    dueDate: string | null;
-    priority: 'low' | 'medium' | 'high';
     category: 'personal' | 'work' | 'urgent' | 'other';
     createdAt: number;
     updatedAt?: number;
@@ -974,10 +1087,8 @@ const TodoList = () => {
         return saved ? JSON.parse(saved) : [];
     });
     const [inputValue, setInputValue] = useState('');
-    const [dueDate, setDueDate] = useState('');
-    const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
     const [category, setCategory] = useState<'personal' | 'work' | 'urgent' | 'other'>('personal');
-    const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'high' | 'work'>('all');
+    const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'work'>('all');
 
     // Edit state
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -994,16 +1105,12 @@ const TodoList = () => {
             id: Date.now().toString(),
             text: inputValue.trim(),
             completed: false,
-            dueDate: dueDate || null,
-            priority,
             category,
             createdAt: Date.now()
         };
 
         setTodos([newTodo, ...todos]);
         setInputValue('');
-        setDueDate('');
-        setPriority('medium');
     };
 
     const toggleTodo = (id: string) => {
@@ -1034,30 +1141,12 @@ const TodoList = () => {
         setEditValue('');
     };
 
-    const isOverdue = (dateStr: string | null) => {
-        if (!dateStr) return false;
-        const due = new Date(dateStr);
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        return due < now;
-    };
-
     const filteredTodos = todos.filter(todo => {
         if (filter === 'active') return !todo.completed;
         if (filter === 'completed') return todo.completed;
-        if (filter === 'high') return todo.priority === 'high';
         if (filter === 'work') return todo.category === 'work';
         return true;
     });
-
-    const getPriorityColor = (p: string) => {
-        switch (p) {
-            case 'high': return 'text-destructive border-destructive/50 bg-destructive/10';
-            case 'medium': return 'text-fairy-yellow border-fairy-yellow/50 bg-fairy-yellow/10';
-            case 'low': return 'text-fairy-blue border-fairy-blue/50 bg-fairy-blue/10';
-            default: return 'text-white/50 border-white/20';
-        }
-    };
 
     const getCategoryColor = (c: string) => {
         switch (c) {
@@ -1105,24 +1194,6 @@ const TodoList = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        <input
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="glass-panel rounded-lg px-3 py-2 text-white/80 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-xs bg-transparent"
-                        />
-
-                        <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
-                            <SelectTrigger className="w-[140px] glass-panel border-0 text-white/80 h-[38px]">
-                                <SelectValue placeholder="Priority" />
-                            </SelectTrigger>
-                            <SelectContent className="glass-panel border-white/10 bg-[#1a1b26] text-white">
-                                <SelectItem value="low">Low Priority</SelectItem>
-                                <SelectItem value="medium">Medium Priority</SelectItem>
-                                <SelectItem value="high">High Priority</SelectItem>
-                            </SelectContent>
-                        </Select>
-
                         <Select value={category} onValueChange={(value: any) => setCategory(value)}>
                             <SelectTrigger className="w-[140px] glass-panel border-0 text-white/80 h-[38px]">
                                 <SelectValue placeholder="Category" />
@@ -1137,9 +1208,8 @@ const TodoList = () => {
                     </div>
                 </div>
 
-                {/* Filters */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {(['all', 'active', 'completed', 'high', 'work'] as const).map((f) => (
+                    {(['all', 'active', 'completed', 'work'] as const).map((f) => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
@@ -1200,11 +1270,7 @@ const TodoList = () => {
                                                     }`}>
                                                     {todo.text}
                                                 </p>
-                                                {todo.priority && (
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${getPriorityColor(todo.priority)} uppercase font-bold`}>
-                                                        {todo.priority}
-                                                    </span>
-                                                )}
+
                                                 {todo.category && (
                                                     <span className={`text-[10px] flex items-center gap-1 ${getCategoryColor(todo.category)}`}>
                                                         <Tag className="w-3 h-3" /> {todo.category}
@@ -1213,18 +1279,6 @@ const TodoList = () => {
                                             </div>
 
                                             <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
-                                                {todo.dueDate && (
-                                                    <div className={`flex items-center gap-1 ${!todo.completed && isOverdue(todo.dueDate)
-                                                        ? 'text-destructive animate-pulse'
-                                                        : ''
-                                                        }`}>
-                                                        <Calendar className="w-3 h-3" />
-                                                        <span>
-                                                            {new Date(todo.dueDate).toLocaleDateString()}
-                                                            {!todo.completed && isOverdue(todo.dueDate) && ' (Overdue)'}
-                                                        </span>
-                                                    </div>
-                                                )}
                                             </div>
                                         </>
                                     )}
