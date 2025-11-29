@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Globe, Server, Clock, Shield, Activity, DollarSign, Calculator, Film, HardDrive, Hash, Lock, Code, Copy, Check, Trash2, Calendar, Plus, CheckCircle2, ListTodo } from 'lucide-react';
+import { MapPin, Globe, Server, Clock, Shield, Activity, DollarSign, Calculator, Film, HardDrive, Hash, Lock, Code, Copy, Check, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface LocationData {
@@ -138,9 +138,12 @@ const Tools = () => {
     );
 };
 
-// IP & Location Tool Component (unchanged)
+// IP & Location Tool Component
 const IPLocationTool = () => {
     const [locationData, setLocationData] = useState<LocationData | null>(null);
+    const [localIp, setLocalIp] = useState<string>('Detecting...');
+    const [ping, setPing] = useState<number | null>(null);
+    const [os, setOs] = useState<string>('Detecting...');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -158,13 +161,61 @@ const IPLocationTool = () => {
             }
         };
 
+        const getLocalIP = async () => {
+            try {
+                const rtc = new RTCPeerConnection({ iceServers: [] });
+                rtc.createDataChannel('');
+                rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
+                rtc.onicecandidate = (ice) => {
+                    if (ice && ice.candidate && ice.candidate.candidate) {
+                        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+                        const match = ice.candidate.candidate.match(ipRegex);
+                        if (match) setLocalIp(match[1]);
+                        rtc.close();
+                    }
+                };
+            } catch (e) {
+                setLocalIp('Unavailable');
+            }
+        };
+
+        const measurePing = async () => {
+            const start = Date.now();
+            try {
+                await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
+                setPing(Date.now() - start);
+            } catch (e) {
+                setPing(null);
+            }
+        };
+
+        const detectOS = () => {
+            const userAgent = window.navigator.userAgent;
+            let osName = "Unknown OS";
+
+            if (userAgent.indexOf("Win") !== -1) osName = "Windows";
+            if (userAgent.indexOf("Mac") !== -1) osName = "macOS";
+            if (userAgent.indexOf("X11") !== -1) osName = "UNIX";
+            if (userAgent.indexOf("Linux") !== -1) osName = "Linux";
+            if (userAgent.indexOf("Android") !== -1) osName = "Android";
+            if (userAgent.indexOf("like Mac") !== -1) osName = "iOS";
+
+            setOs(osName);
+        };
+
         fetchLocationData();
+        getLocalIP();
+        measurePing();
+        detectOS();
+
+        const interval = setInterval(measurePing, 2000);
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
         return (
             <div className="flex justify-center items-center py-20">
-                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -180,96 +231,125 @@ const IPLocationTool = () => {
     if (!locationData) return null;
 
     return (
-        <div className="space-y-4 animate-fade-in">
-            {/* IP Address Card */}
-            <div className="glass-panel rounded-xl p-6 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-start gap-4">
-                    <div className="p-3 bg-primary/20 rounded-lg">
-                        <Globe className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="text-white/60 text-xs font-mono mb-2">IP_ADDRESS</h3>
-                        <p className="text-2xl font-bold text-primary font-mono">{locationData.ip}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Location Info Grid */}
-            <div className="grid md:grid-cols-2 gap-4">
-                <div className="glass-panel rounded-xl p-5 hover:bg-white/10 transition-all duration-300">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-fairy-blue/20 rounded-md">
-                            <MapPin className="w-5 h-5 text-fairy-blue" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-white/60 text-xs font-mono mb-1">LOCATION</h3>
-                            <p className="text-lg font-semibold text-white font-mono">{locationData.city}</p>
-                            <p className="text-white/70 text-sm font-mono">{locationData.region}</p>
-                        </div>
-                    </div>
+        <div className="space-y-6 animate-fade-in">
+            {/* Main Network Card */}
+            <div className="glass-panel rounded-2xl p-8 border-primary/10 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Activity className="w-32 h-32 text-primary" />
                 </div>
 
-                <div className="glass-panel rounded-xl p-5 hover:bg-white/10 transition-all duration-300">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-fairy-teal/20 rounded-md">
-                            <Globe className="w-5 h-5 text-fairy-teal" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-white/60 text-xs font-mono mb-1">COUNTRY</h3>
-                            <p className="text-lg font-semibold text-white font-mono">{locationData.country}</p>
-                            {locationData.postal && (
-                                <p className="text-white/70 text-sm font-mono">Postal: {locationData.postal}</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="glass-panel rounded-xl p-5 hover:bg-white/10 transition-all duration-300">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-fairy-purple/20 rounded-md">
-                            <Activity className="w-5 h-5 text-fairy-purple" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-white/60 text-xs font-mono mb-1">COORDINATES</h3>
-                            <p className="text-lg font-semibold text-white font-mono">{locationData.loc}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="glass-panel rounded-xl p-5 hover:bg-white/10 transition-all duration-300">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-fairy-light-purple/20 rounded-md">
-                            <Clock className="w-5 h-5 text-fairy-light-purple" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-white/60 text-xs font-mono mb-1">TIMEZONE</h3>
-                            <p className="text-lg font-semibold text-white font-mono">{locationData.timezone}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="glass-panel rounded-xl p-5 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-start gap-3">
-                    <div className="p-2 bg-secondary/20 rounded-md">
-                        <Server className="w-5 h-5 text-secondary" />
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="text-white/60 text-xs font-mono mb-1">ISP</h3>
-                        <p className="text-base font-semibold text-white font-mono">{locationData.org}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="glass-panel rounded-xl p-5 border-fairy-yellow/30">
-                <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-fairy-yellow mt-0.5" />
+                <div className="grid md:grid-cols-2 gap-8 relative z-10">
                     <div>
-                        <h3 className="text-fairy-yellow font-semibold mb-2 font-mono text-sm">PRIVACY_NOTICE</h3>
-                        <p className="text-white/60 text-xs font-mono leading-relaxed">
-                            // This information is publicly available through your internet connection.<br />
-                            // No data is stored or tracked. Fetched in real-time using ipapi.co.
-                        </p>
+                        <div className="flex items-center gap-3 mb-2">
+                            <Globe className="w-5 h-5 text-primary" />
+                            <h3 className="text-white/60 text-xs font-mono tracking-wider">GLOBAL_IP</h3>
+                        </div>
+                        <p className="text-4xl font-bold text-white font-mono tracking-tight">{locationData.ip}</p>
+                        <p className="text-primary/60 text-sm mt-2 font-mono">{locationData.org}</p>
+                    </div>
+
+                    <div className="md:border-l md:border-white/10 md:pl-8">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Wifi className="w-5 h-5 text-fairy-teal" />
+                            <h3 className="text-white/60 text-xs font-mono tracking-wider">LOCAL_IP</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-white/90 font-mono tracking-tight">{localIp}</p>
+                        <div className="flex items-center gap-2 mt-3">
+                            <div className={`w-2 h-2 rounded-full ${ping && ping < 100 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                            <p className="text-white/40 text-xs font-mono">
+                                Connection Status: <span className="text-white/80">Active</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Network Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="glass-panel rounded-xl p-5 hover:bg-white/5 transition-all duration-300">
+                    <div className="flex flex-col h-full justify-between">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-2 bg-fairy-blue/10 rounded-lg">
+                                <Zap className="w-5 h-5 text-fairy-blue" />
+                            </div>
+                            <span className="text-xs font-mono text-white/40">PING</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white font-mono">{ping ? `${ping}ms` : '--'}</p>
+                            <p className="text-xs text-white/40 font-mono mt-1">Latency</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="glass-panel rounded-xl p-5 hover:bg-white/5 transition-all duration-300">
+                    <div className="flex flex-col h-full justify-between">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-2 bg-fairy-purple/10 rounded-lg">
+                                <MapPin className="w-5 h-5 text-fairy-purple" />
+                            </div>
+                            <span className="text-xs font-mono text-white/40">REGION</span>
+                        </div>
+                        <div>
+                            <p className="text-lg font-bold text-white font-mono truncate" title={locationData.city}>{locationData.city}</p>
+                            <p className="text-xs text-white/40 font-mono mt-1 truncate">{locationData.region}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="glass-panel rounded-xl p-5 hover:bg-white/5 transition-all duration-300">
+                    <div className="flex flex-col h-full justify-between">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-2 bg-fairy-teal/10 rounded-lg">
+                                <Globe className="w-5 h-5 text-fairy-teal" />
+                            </div>
+                            <span className="text-xs font-mono text-white/40">COUNTRY</span>
+                        </div>
+                        <div>
+                            <p className="text-lg font-bold text-white font-mono">{locationData.country}</p>
+                            <p className="text-xs text-white/40 font-mono mt-1">{locationData.postal || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="glass-panel rounded-xl p-5 hover:bg-white/5 transition-all duration-300">
+                    <div className="flex flex-col h-full justify-between">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-2 bg-fairy-light-purple/10 rounded-lg">
+                                <Clock className="w-5 h-5 text-fairy-light-purple" />
+                            </div>
+                            <span className="text-xs font-mono text-white/40">TIMEZONE</span>
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-white font-mono truncate" title={locationData.timezone}>{locationData.timezone}</p>
+                            <p className="text-xs text-white/40 font-mono mt-1">Local Time</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Technical Details */}
+            <div className="glass-panel rounded-xl p-6 border-white/5">
+                <h3 className="text-white/60 text-xs font-mono mb-4 uppercase tracking-wider">Technical Details</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                            <span className="text-white/40 text-sm font-mono">Coordinates</span>
+                            <span className="text-white/80 text-sm font-mono">{locationData.loc}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                            <span className="text-white/40 text-sm font-mono">ISP Organization</span>
+                            <span className="text-white/80 text-sm font-mono truncate max-w-[200px]">{locationData.org}</span>
+                        </div>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                            <span className="text-white/40 text-sm font-mono">Operating System</span>
+                            <span className="text-white/80 text-sm font-mono">{os}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                            <span className="text-white/40 text-sm font-mono">Data Center</span>
+                            <span className="text-white/80 text-sm font-mono">{locationData.org.includes('Cloud') || locationData.org.includes('Amazon') ? 'Yes' : 'No'}</span>
+                        </div>
                     </div>
                 </div>
             </div>
