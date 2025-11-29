@@ -67,7 +67,7 @@ export const PROJECTS_DATA = [
         description:
             'A lightweight, drag-and-drop GUI that converts PNG, JPEG, WebP, and other common formats to AVIF—delivering smaller file sizes without visible quality loss. Features include real-time progress bar, non-blocking UI, and cross-platform support.',
         tags: ['Python', 'PyQt6', 'Pillow', 'pillow-avif-plugin'],
-        link: 'https://github.com/karmugilen/ImagestoAVIF-Converter',
+        link: 'https://github.com/karmugilen/Images-to-Avif-Converter',
     },
     {
         title: 'Stock Market Trend Analyzer',
@@ -80,6 +80,6 @@ export const PROJECTS_DATA = [
             'Google Trends',
             'Automation',
         ],
-        link: '#',
+        link: 'https://github.com/karmugilen/trendAnalyser',
     },
 ];
