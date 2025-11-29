@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save } from 'lucide-react';
+import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save, Brain, RotateCcw, ChevronRight, ChevronLeft, Eye, EyeOff, Layers } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -14,14 +14,11 @@ interface LocationData {
     postal?: string;
 }
 
-import ThreeBackground from '@/components/ThreeBackground';
-
 const Tools = () => {
     const [activeTab, setActiveTab] = useState('location');
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-mono relative">
-            <ThreeBackground />
+        <div className="min-h-screen bg-background text-foreground font-mono">
             {/* Header/Navigation */}
             <header className="p-6">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -57,7 +54,7 @@ const Tools = () => {
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 glass-panel p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-4 glass-panel p-1 rounded-lg mb-8">
                         <TabsTrigger
                             value="location"
                             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
@@ -79,6 +76,13 @@ const Tools = () => {
                             <ListTodo className="w-4 h-4 mr-1" />
                             Todo
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="memory"
+                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
+                        >
+                            <Brain className="w-4 h-4 mr-1" />
+                            Memory
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="location">
@@ -91,6 +95,10 @@ const Tools = () => {
 
                     <TabsContent value="todo">
                         <TodoList />
+                    </TabsContent>
+
+                    <TabsContent value="memory">
+                        <MemoryPalaceTool />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -286,10 +294,7 @@ const IPLocationTool = () => {
                             <span className="text-white/40 text-sm font-mono">ISP Organization</span>
                             <span className="text-white/80 text-sm font-mono truncate max-w-[200px]">{locationData.org}</span>
                         </div>
-                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                            <span className="text-white/40 text-sm font-mono">Data Center</span>
-                            <span className="text-white/80 text-sm font-mono">{locationData.org.includes('Cloud') || locationData.org.includes('Amazon') ? 'Yes' : 'No'}</span>
-                        </div>
+
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center border-b border-white/5 pb-2">
@@ -699,6 +704,258 @@ const CostCalculator = () => {
     );
 };
 
+
+// Memory Palace Tool
+const MemoryPalaceTool = () => {
+    const [mode, setMode] = useState<'setup' | 'memorize' | 'recall'>('setup');
+    const [deck, setDeck] = useState<string[]>([]);
+    const [loci, setLoci] = useState<string[]>(() => {
+        const saved = localStorage.getItem('fairyfloss-loci');
+        return saved ? JSON.parse(saved) : ['Front Door', 'Living Room', 'Kitchen', 'Hallway', 'Bathroom', 'Bedroom'];
+    });
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [showCard, setShowCard] = useState(false);
+    const [newLocus, setNewLocus] = useState('');
+
+    const suits = ['♠', '♥', '♣', '♦'];
+    const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+    useEffect(() => {
+        localStorage.setItem('fairyfloss-loci', JSON.stringify(loci));
+    }, [loci]);
+
+    const generateDeck = () => {
+        const newDeck: string[] = [];
+        for (const s of suits) {
+            for (const v of values) {
+                newDeck.push(`${v}${s}`);
+            }
+        }
+        return newDeck;
+    };
+
+    const shuffleDeck = () => {
+        const newDeck = generateDeck();
+        for (let i = newDeck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+        }
+        setDeck(newDeck);
+        setCurrentIndex(0);
+    };
+
+    const addLocus = () => {
+        if (newLocus.trim()) {
+            setLoci([...loci, newLocus.trim()]);
+            setNewLocus('');
+        }
+    };
+
+    const removeLocus = (index: number) => {
+        setLoci(loci.filter((_, i) => i !== index));
+    };
+
+    const startMemorization = () => {
+        if (deck.length === 0) shuffleDeck();
+        setMode('memorize');
+        setCurrentIndex(0);
+    };
+
+    const startRecall = () => {
+        setMode('recall');
+        setCurrentIndex(0);
+        setShowCard(false);
+    };
+
+    const nextStep = () => {
+        if (currentIndex < Math.min(deck.length, loci.length) - 1) {
+            setCurrentIndex(currentIndex + 1);
+            setShowCard(false);
+        }
+    };
+
+    const prevStep = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(currentIndex - 1);
+            setShowCard(false);
+        }
+    };
+
+    const getCardColor = (card: string) => {
+        return card.includes('♥') || card.includes('♦') ? 'text-destructive' : 'text-white';
+    };
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            <div className="glass-panel rounded-xl p-8">
+                <div className="code-block mb-6">
+                    <div className="text-white/60">
+                        const <span className="text-primary">mindPalace</span> = {'{'}
+                    </div>
+                    <div className="pl-8 py-2">
+                        <div className="text-fairy-yellow">
+                            // Method of Loci for card memorization
+                        </div>
+                    </div>
+                    <div className="text-white/60">{'}'}</div>
+                </div>
+
+                {/* Navigation / Controls */}
+                <div className="flex justify-between items-center mb-8">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setMode('setup')}
+                            className={`px-4 py-2 rounded-lg font-mono text-xs transition-all ${mode === 'setup' ? 'bg-primary/20 text-primary' : 'text-white/40 hover:text-white'}`}
+                        >
+                            SETUP
+                        </button>
+                        <button
+                            onClick={startMemorization}
+                            className={`px-4 py-2 rounded-lg font-mono text-xs transition-all ${mode === 'memorize' ? 'bg-primary/20 text-primary' : 'text-white/40 hover:text-white'}`}
+                        >
+                            MEMORIZE
+                        </button>
+                        <button
+                            onClick={startRecall}
+                            className={`px-4 py-2 rounded-lg font-mono text-xs transition-all ${mode === 'recall' ? 'bg-primary/20 text-primary' : 'text-white/40 hover:text-white'}`}
+                        >
+                            RECALL
+                        </button>
+                    </div>
+                    {mode !== 'setup' && (
+                        <div className="text-white/40 font-mono text-xs">
+                            {currentIndex + 1} / {Math.min(deck.length, loci.length)}
+                        </div>
+                    )}
+                </div>
+
+                {mode === 'setup' && (
+                    <div className="space-y-8">
+                        {/* Deck Control */}
+                        <div className="glass-panel rounded-xl p-6 border-white/5">
+                            <h3 className="text-white/60 text-xs font-mono mb-4 uppercase tracking-wider flex items-center gap-2">
+                                <Layers className="w-4 h-4" /> Deck
+                            </h3>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={shuffleDeck}
+                                    className="px-6 py-3 bg-primary/20 hover:bg-primary/30 rounded-lg text-primary font-mono text-sm transition-all flex items-center gap-2"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    SHUFFLE_DECK
+                                </button>
+                                <span className="text-white/40 font-mono text-xs">
+                                    {deck.length > 0 ? 'Deck Ready' : 'No Deck Generated'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Loci Control */}
+                        <div className="glass-panel rounded-xl p-6 border-white/5">
+                            <h3 className="text-white/60 text-xs font-mono mb-4 uppercase tracking-wider flex items-center gap-2">
+                                <MapPin className="w-4 h-4" /> Loci (Locations)
+                            </h3>
+                            <div className="flex gap-2 mb-4">
+                                <input
+                                    type="text"
+                                    value={newLocus}
+                                    onChange={(e) => setNewLocus(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && addLocus()}
+                                    placeholder="Add new location..."
+                                    className="flex-1 glass-panel rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm"
+                                />
+                                <button
+                                    onClick={addLocus}
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                                {loci.map((locus, idx) => (
+                                    <div key={idx} className="flex justify-between items-center p-3 glass-panel rounded-lg group">
+                                        <span className="text-white/80 font-mono text-sm">
+                                            <span className="text-primary/50 mr-2">{idx + 1}.</span>
+                                            {locus}
+                                        </span>
+                                        <button
+                                            onClick={() => removeLocus(idx)}
+                                            className="text-white/20 hover:text-destructive transition-all opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {(mode === 'memorize' || mode === 'recall') && (
+                    <div className="space-y-8">
+                        <div className="grid md:grid-cols-2 gap-8 items-center">
+                            {/* Locus Card */}
+                            <div className="glass-panel rounded-2xl p-8 border-primary/20 flex flex-col items-center justify-center min-h-[200px] text-center">
+                                <MapPin className="w-8 h-8 text-primary mb-4 opacity-50" />
+                                <h3 className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">LOCATION</h3>
+                                <p className="text-2xl md:text-3xl font-bold text-white font-mono break-words max-w-full">
+                                    {loci[currentIndex] || 'End of Path'}
+                                </p>
+                            </div>
+
+                            {/* Playing Card */}
+                            <div className="glass-panel rounded-2xl p-8 border-fairy-purple/20 flex flex-col items-center justify-center min-h-[200px] text-center relative overflow-hidden">
+                                {mode === 'recall' && !showCard ? (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm z-10 cursor-pointer" onClick={() => setShowCard(true)}>
+                                        <div className="flex flex-col items-center gap-2 text-white/40 hover:text-white transition-all">
+                                            <Eye className="w-8 h-8" />
+                                            <span className="font-mono text-xs">REVEAL</span>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <Layers className="w-8 h-8 text-fairy-purple mb-4 opacity-50" />
+                                <h3 className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">CARD</h3>
+                                {deck[currentIndex] ? (
+                                    <p className={`text-5xl md:text-6xl font-bold font-mono ${getCardColor(deck[currentIndex])}`}>
+                                        {deck[currentIndex]}
+                                    </p>
+                                ) : (
+                                    <p className="text-white/40 font-mono">End of Deck</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex justify-center items-center gap-8">
+                            <button
+                                onClick={prevStep}
+                                disabled={currentIndex === 0}
+                                className="p-4 rounded-full glass-panel hover:bg-white/10 disabled:opacity-30 transition-all"
+                            >
+                                <ChevronLeft className="w-6 h-6 text-white" />
+                            </button>
+
+                            <div className="text-center">
+                                <p className="text-white/40 font-mono text-xs mb-1">
+                                    {mode === 'memorize' ? 'Visualize connection' : 'Recall then reveal'}
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={nextStep}
+                                disabled={currentIndex >= Math.min(deck.length, loci.length) - 1}
+                                className="p-4 rounded-full glass-panel hover:bg-white/10 disabled:opacity-30 transition-all"
+                            >
+                                <ChevronRight className="w-6 h-6 text-white" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 interface Todo {
     id: string;
