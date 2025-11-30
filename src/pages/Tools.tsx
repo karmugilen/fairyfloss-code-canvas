@@ -801,8 +801,12 @@ const CardMemorizer = () => {
         if (enableTimer) setIsTimerRunning(true);
     };
 
-    const stopSession = () => {
+    const resetSession = () => {
         setIsTimerRunning(false);
+        setTimer(0);
+        setCurrentIndex(0);
+        setShowCard(false);
+        setDeck([]); // Clear deck to force regeneration on next start
         setMode('setup');
     };
 
@@ -871,10 +875,10 @@ const CardMemorizer = () => {
                     <div className="flex items-center gap-4">
                         {mode !== 'setup' && (
                             <button
-                                onClick={stopSession}
+                                onClick={resetSession}
                                 className="text-white/40 hover:text-white transition-colors flex items-center gap-2 text-xs font-mono"
                             >
-                                <Settings className="w-4 h-4" /> CONFIG
+                                <RotateCcw className="w-4 h-4" /> RESET
                             </button>
                         )}
                     </div>
