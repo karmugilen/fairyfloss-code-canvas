@@ -28,9 +28,10 @@ const Tools = () => {
                     if (Date.now() - timestamp < 5 * 60 * 1000) return; // Skip if cache is fresh
                 }
                 
-                // Preload in background
+                // Preload in background - stories from last 24h with good scores
+                const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
                 const response = await fetch(
-                    'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=100'
+                    `https://hn.algolia.com/api/v1/search?tags=story&numericFilters=created_at_i>${oneDayAgo},points>10&hitsPerPage=100`
                 );
                 if (!response.ok) return;
                 const data = await response.json();
@@ -1442,9 +1443,10 @@ const HackerNews = () => {
 
             setIsRefreshing(true);
             
-            // Use Algolia HN API - single fast request instead of 200+ individual calls
+            // Use Algolia HN API - search stories from last 24 hours, sorted by popularity
+            const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
             const response = await fetch(
-                'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=100'
+                `https://hn.algolia.com/api/v1/search?tags=story&numericFilters=created_at_i>${oneDayAgo},points>10&hitsPerPage=100`
             );
             
             if (!response.ok) throw new Error('Failed to fetch stories');
@@ -1469,13 +1471,12 @@ const HackerNews = () => {
                 descendants: hit.num_comments
             }));
 
-            // Filter for last 24 hours and sort by score
-            const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
-            const todaysStories = fetchedStories
-                .filter(story => story && story.time >= oneDayAgo)
+            // Sort by score
+            const sortedStories = fetchedStories
+                .filter(story => story && story.score)
                 .sort((a, b) => b.score - a.score);
 
-            const finalStories = todaysStories.length > 0 ? todaysStories : fetchedStories;
+            const finalStories = sortedStories.length > 0 ? sortedStories : fetchedStories;
             
             // Cache for instant loading next time
             localStorage.setItem('hn-cache', JSON.stringify({
