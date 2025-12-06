@@ -1520,6 +1520,30 @@ const HackerNews = () => {
         localStorage.setItem('hn-read', JSON.stringify(readStories));
     }, [readStories]);
 
+    // Mark stories as read when scrolled past (exits viewport from top)
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    // Mark as read when story exits viewport from the TOP (user scrolled past it)
+                    if (!entry.isIntersecting && entry.boundingClientRect.bottom < 0) {
+                        const storyId = parseInt(entry.target.getAttribute('data-story-id') || '0');
+                        if (storyId && !readStories.includes(storyId)) {
+                            setReadStories(prev => [...prev, storyId]);
+                        }
+                    }
+                });
+            },
+            { threshold: 0 }
+        );
+
+        // Observe all story elements
+        const storyElements = document.querySelectorAll('[data-story-id]');
+        storyElements.forEach(el => observer.observe(el));
+
+        return () => observer.disconnect();
+    }, [stories, readStories]);
+
     const toggleSave = (e: React.MouseEvent, id: number) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1769,6 +1793,7 @@ const HackerNews = () => {
                         return (
                             <a
                                 key={story.id}
+                                data-story-id={story.id}
                                 href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
