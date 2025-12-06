@@ -17,6 +17,58 @@ interface LocationData {
 const Tools = () => {
     const [activeTab, setActiveTab] = useState('location');
 
+    // Preload HN data on page load (before user clicks HN tab)
+    useEffect(() => {
+        const preloadHN = async () => {
+            try {
+                // Check if cache is recent (less than 5 minutes old)
+                const cached = localStorage.getItem('hn-cache');
+                if (cached) {
+                    const { timestamp } = JSON.parse(cached);
+                    if (Date.now() - timestamp < 5 * 60 * 1000) return; // Skip if cache is fresh
+                }
+                
+                // Preload in background
+                const response = await fetch(
+                    'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=100'
+                );
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                const stories = data.hits.map((hit: {
+                    objectID: string;
+                    title: string;
+                    url?: string;
+                    author: string;
+                    points: number;
+                    created_at_i: number;
+                    num_comments: number;
+                }) => ({
+                    id: parseInt(hit.objectID),
+                    title: hit.title,
+                    url: hit.url,
+                    by: hit.author,
+                    score: hit.points,
+                    time: hit.created_at_i,
+                    descendants: hit.num_comments
+                }));
+
+                const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+                const todaysStories = stories
+                    .filter((s: { time: number }) => s && s.time >= oneDayAgo)
+                    .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
+
+                localStorage.setItem('hn-cache', JSON.stringify({
+                    stories: todaysStories.length > 0 ? todaysStories : stories,
+                    timestamp: Date.now()
+                }));
+            } catch {
+                // Silent fail for preload
+            }
+        };
+        preloadHN();
+    }, []);
+
     return (
         <div className="min-h-screen bg-background text-foreground font-mono">
             {/* Header/Navigation */}
@@ -1373,39 +1425,65 @@ const HackerNews = () => {
         return `${hours}h ${mins}m ${secs}s`;
     };
 
-    const fetchStories = async () => {
+    const fetchStories = async (showFromCache = false) => {
         try {
-            setIsRefreshing(true);
-            const bestStoriesRes = await fetch('https://hacker-news.firebaseio.com/v0/beststories.json');
-            if (!bestStoriesRes.ok) throw new Error('Failed to fetch stories');
-            const bestStoryIds: number[] = await bestStoriesRes.json();
-
-            // Batch fetch in parallel for faster loading (5 batches of 40)
-            const ids = bestStoryIds.slice(0, 200);
-            const batchSize = 40;
-            const batches: Promise<HNStory[]>[] = [];
-            
-            for (let i = 0; i < ids.length; i += batchSize) {
-                const batch = ids.slice(i, i + batchSize);
-                batches.push(
-                    Promise.all(
-                        batch.map(async (id) => {
-                            const res = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-                            return res.json();
-                        })
-                    )
-                );
+            // Show cached data immediately for instant display
+            if (showFromCache) {
+                const cached = localStorage.getItem('hn-cache');
+                if (cached) {
+                    const { stories: cachedStories, timestamp } = JSON.parse(cached);
+                    if (cachedStories && cachedStories.length > 0) {
+                        setStories(cachedStories);
+                        setLastUpdated(new Date(timestamp));
+                        setLoading(false);
+                    }
+                }
             }
 
-            const results = await Promise.all(batches);
-            const fetchedStories: HNStory[] = results.flat();
+            setIsRefreshing(true);
             
+            // Use Algolia HN API - single fast request instead of 200+ individual calls
+            const response = await fetch(
+                'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=100'
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch stories');
+            const data = await response.json();
+            
+            // Transform Algolia response to our HNStory format
+            const fetchedStories: HNStory[] = data.hits.map((hit: {
+                objectID: string;
+                title: string;
+                url?: string;
+                author: string;
+                points: number;
+                created_at_i: number;
+                num_comments: number;
+            }) => ({
+                id: parseInt(hit.objectID),
+                title: hit.title,
+                url: hit.url,
+                by: hit.author,
+                score: hit.points,
+                time: hit.created_at_i,
+                descendants: hit.num_comments
+            }));
+
+            // Filter for last 24 hours and sort by score
             const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
             const todaysStories = fetchedStories
                 .filter(story => story && story.time >= oneDayAgo)
-                .slice(0, 100);
+                .sort((a, b) => b.score - a.score);
 
-            setStories(todaysStories.length > 0 ? todaysStories : fetchedStories.slice(0, 100));
+            const finalStories = todaysStories.length > 0 ? todaysStories : fetchedStories;
+            
+            // Cache for instant loading next time
+            localStorage.setItem('hn-cache', JSON.stringify({
+                stories: finalStories,
+                timestamp: Date.now()
+            }));
+
+            setStories(finalStories);
             setLastUpdated(new Date());
             setError(null);
         } catch (err) {
@@ -1417,7 +1495,8 @@ const HackerNews = () => {
     };
 
     useEffect(() => {
-        fetchStories();
+        // Load from cache first, then fetch fresh data
+        fetchStories(true);
     }, []);
 
     useEffect(() => {
@@ -1503,13 +1582,16 @@ const HackerNews = () => {
             return 0;
         });
 
-    // Stats
+    // Stats - filter valid stories and handle undefined scores
+    const validStories = stories.filter(s => s && typeof s.score === 'number');
     const stats = {
         total: stories.length,
-        avgScore: stories.length > 0 ? Math.round(stories.reduce((a, b) => a + b.score, 0) / stories.length) : 0,
-        totalComments: stories.reduce((a, b) => a + (b.descendants || 0), 0),
+        avgScore: validStories.length > 0 
+            ? Math.round(validStories.reduce((a, b) => a + (b.score || 0), 0) / validStories.length) 
+            : 0,
+        totalComments: stories.reduce((a, b) => a + (b?.descendants || 0), 0),
         saved: savedStories.length,
-        read: readStories.filter(id => stories.some(s => s.id === id)).length
+        read: readStories.filter(id => stories.some(s => s?.id === id)).length
     };
 
     if (loading && stories.length === 0) {
@@ -1535,7 +1617,7 @@ const HackerNews = () => {
             <div className="glass-panel rounded-xl p-8 border-destructive/50">
                 <p className="text-destructive text-center font-mono">{error}</p>
                 <button
-                    onClick={fetchStories}
+                    onClick={() => fetchStories()}
                     className="mt-4 mx-auto block px-4 py-2 glass-panel rounded-lg hover:bg-white/10 transition-all text-sm font-mono text-primary"
                 >
                     Try Again
@@ -1578,7 +1660,7 @@ const HackerNews = () => {
                         </div>
 
                         <button
-                            onClick={fetchStories}
+                            onClick={() => fetchStories()}
                             disabled={isRefreshing}
                             className="glass-panel p-3 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50"
                         >
