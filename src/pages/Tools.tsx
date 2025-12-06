@@ -54,13 +54,13 @@ const Tools = () => {
                     descendants: hit.num_comments
                 }));
 
-                const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
-                const todaysStories = stories
-                    .filter((s: { time: number }) => s && s.time >= oneDayAgo)
+                // Sort by score (API already filters for last 24h)
+                const sortedStories = stories
+                    .filter((s: { score: number }) => s && s.score)
                     .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
                 localStorage.setItem('hn-cache', JSON.stringify({
-                    stories: todaysStories.length > 0 ? todaysStories : stories,
+                    stories: sortedStories.length > 0 ? sortedStories : stories,
                     timestamp: Date.now()
                 }));
             } catch {
