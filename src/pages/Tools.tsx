@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save, Brain, RotateCcw, ChevronRight, ChevronLeft, Eye, EyeOff, Layers, Play, Pause, Timer, Settings } from 'lucide-react';
+import { MapPin, Globe, Clock, Activity, DollarSign, Calculator, Trash2, Calendar, Plus, CheckCircle2, ListTodo, Wifi, Zap, Check, Pencil, Tag, Flag, X, Save, Brain, RotateCcw, ChevronRight, ChevronLeft, Eye, EyeOff, Layers, Play, Pause, Timer, Settings, Newspaper, ExternalLink, RefreshCw, TrendingUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -54,7 +54,7 @@ const Tools = () => {
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 glass-panel p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-5 glass-panel p-1 rounded-lg mb-8">
                         <TabsTrigger
                             value="location"
                             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
@@ -83,6 +83,13 @@ const Tools = () => {
                             <Brain className="w-4 h-4 mr-1" />
                             Memory
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="hackernews"
+                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
+                        >
+                            <Newspaper className="w-4 h-4 mr-1" />
+                            HN
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="location">
@@ -99,6 +106,10 @@ const Tools = () => {
 
                     <TabsContent value="memory">
                         <CardMemorizer />
+                    </TabsContent>
+
+                    <TabsContent value="hackernews">
+                        <HackerNews />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -1311,5 +1322,456 @@ const TodoList = () => {
     );
 };
 
+
+// Hacker News Component
+interface HNStory {
+    id: number;
+    title: string;
+    url?: string;
+    by: string;
+    score: number;
+    time: number;
+    descendants?: number;
+}
+
+type SortOption = 'score' | 'time' | 'comments';
+type FilterOption = 'all' | 'show' | 'ask' | 'jobs' | 'saved';
+
+const HackerNews = () => {
+    const [stories, setStories] = useState<HNStory[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [timeToMidnight, setTimeToMidnight] = useState('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    
+    // Enhanced features
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState<SortOption>('score');
+    const [filterBy, setFilterBy] = useState<FilterOption>('all');
+    const [savedStories, setSavedStories] = useState<number[]>(() => {
+        const saved = localStorage.getItem('hn-saved');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [readStories, setReadStories] = useState<number[]>(() => {
+        const read = localStorage.getItem('hn-read');
+        return read ? JSON.parse(read) : [];
+    });
+
+    // Calculate seconds until midnight
+    const getSecondsToMidnight = () => {
+        const now = new Date();
+        const midnight = new Date();
+        midnight.setHours(24, 0, 0, 0);
+        return Math.floor((midnight.getTime() - now.getTime()) / 1000);
+    };
+
+    const formatTimeToMidnight = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hours}h ${mins}m ${secs}s`;
+    };
+
+    const fetchStories = async () => {
+        try {
+            setIsRefreshing(true);
+            const bestStoriesRes = await fetch('https://hacker-news.firebaseio.com/v0/beststories.json');
+            if (!bestStoriesRes.ok) throw new Error('Failed to fetch stories');
+            const bestStoryIds: number[] = await bestStoriesRes.json();
+
+            // Batch fetch in parallel for faster loading (5 batches of 40)
+            const ids = bestStoryIds.slice(0, 200);
+            const batchSize = 40;
+            const batches: Promise<HNStory[]>[] = [];
+            
+            for (let i = 0; i < ids.length; i += batchSize) {
+                const batch = ids.slice(i, i + batchSize);
+                batches.push(
+                    Promise.all(
+                        batch.map(async (id) => {
+                            const res = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+                            return res.json();
+                        })
+                    )
+                );
+            }
+
+            const results = await Promise.all(batches);
+            const fetchedStories: HNStory[] = results.flat();
+            
+            const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+            const todaysStories = fetchedStories
+                .filter(story => story && story.time >= oneDayAgo)
+                .slice(0, 100);
+
+            setStories(todaysStories.length > 0 ? todaysStories : fetchedStories.slice(0, 100));
+            setLastUpdated(new Date());
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch stories');
+        } finally {
+            setLoading(false);
+            setIsRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStories();
+    }, []);
+
+    useEffect(() => {
+        const updateTimer = () => {
+            const seconds = getSecondsToMidnight();
+            setTimeToMidnight(formatTimeToMidnight(seconds));
+            if (seconds <= 1) fetchStories();
+        };
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Save to localStorage
+    useEffect(() => {
+        localStorage.setItem('hn-saved', JSON.stringify(savedStories));
+    }, [savedStories]);
+
+    useEffect(() => {
+        localStorage.setItem('hn-read', JSON.stringify(readStories));
+    }, [readStories]);
+
+    const toggleSave = (e: React.MouseEvent, id: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setSavedStories(prev => 
+            prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+        );
+    };
+
+    const markAsRead = (id: number) => {
+        if (!readStories.includes(id)) {
+            setReadStories(prev => [...prev, id]);
+        }
+    };
+
+    const getStoryType = (title: string): { type: string; badge: string; color: string } | null => {
+        if (title.startsWith('Show HN:')) return { type: 'show', badge: '🚀 Show', color: 'text-fairy-teal' };
+        if (title.startsWith('Ask HN:')) return { type: 'ask', badge: '❓ Ask', color: 'text-fairy-purple' };
+        if (title.includes('hiring') || title.includes('job')) return { type: 'jobs', badge: '💼 Job', color: 'text-fairy-yellow' };
+        return null;
+    };
+
+    const formatTimeAgo = (timestamp: number) => {
+        const seconds = Math.floor(Date.now() / 1000 - timestamp);
+        if (seconds < 60) return `${seconds}s ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
+    };
+
+    const getDomain = (url?: string) => {
+        if (!url) return 'news.ycombinator.com';
+        try {
+            return new URL(url).hostname.replace('www.', '');
+        } catch {
+            return 'news.ycombinator.com';
+        }
+    };
+
+    // Filter and sort stories
+    const filteredStories = stories
+        .filter(story => {
+            if (!story) return false;
+            // Search filter
+            if (searchQuery && !story.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+                return false;
+            }
+            // Type filter
+            if (filterBy === 'saved') return savedStories.includes(story.id);
+            if (filterBy === 'show') return story.title.startsWith('Show HN:');
+            if (filterBy === 'ask') return story.title.startsWith('Ask HN:');
+            if (filterBy === 'jobs') return story.title.toLowerCase().includes('hiring') || story.title.toLowerCase().includes('job');
+            return true;
+        })
+        .sort((a, b) => {
+            if (sortBy === 'score') return b.score - a.score;
+            if (sortBy === 'time') return b.time - a.time;
+            if (sortBy === 'comments') return (b.descendants || 0) - (a.descendants || 0);
+            return 0;
+        });
+
+    // Stats
+    const stats = {
+        total: stories.length,
+        avgScore: stories.length > 0 ? Math.round(stories.reduce((a, b) => a + b.score, 0) / stories.length) : 0,
+        totalComments: stories.reduce((a, b) => a + (b.descendants || 0), 0),
+        saved: savedStories.length,
+        read: readStories.filter(id => stories.some(s => s.id === id)).length
+    };
+
+    if (loading && stories.length === 0) {
+        return (
+            <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="glass-panel rounded-xl p-4 animate-pulse">
+                        <div className="flex gap-4">
+                            <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-white/10 rounded w-3/4"></div>
+                                <div className="h-3 bg-white/10 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    if (error && stories.length === 0) {
+        return (
+            <div className="glass-panel rounded-xl p-8 border-destructive/50">
+                <p className="text-destructive text-center font-mono">{error}</p>
+                <button
+                    onClick={fetchStories}
+                    className="mt-4 mx-auto block px-4 py-2 glass-panel rounded-lg hover:bg-white/10 transition-all text-sm font-mono text-primary"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            {/* Header Card */}
+            <div className="glass-panel rounded-2xl p-6 border-primary/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <TrendingUp className="w-24 h-24 text-primary" />
+                </div>
+
+                <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <Newspaper className="w-5 h-5 text-primary" />
+                            <h3 className="text-white/60 text-xs font-mono tracking-wider">HACKER_NEWS_DAILY</h3>
+                        </div>
+                        <p className="text-xl font-bold text-white font-mono">Today's Best Stories</p>
+                        {lastUpdated && (
+                            <p className="text-white/40 text-xs font-mono mt-1">
+                                Updated: {lastUpdated.toLocaleTimeString()}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="glass-panel rounded-xl px-4 py-3 border-fairy-teal/30">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-fairy-teal" />
+                                <div className="text-center">
+                                    <p className="text-xs text-white/40 font-mono">Next daily update</p>
+                                    <p className="text-lg font-bold text-fairy-teal font-mono">{timeToMidnight}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={fetchStories}
+                            disabled={isRefreshing}
+                            className="glass-panel p-3 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50"
+                        >
+                            <RefreshCw className={`w-5 h-5 text-primary ${isRefreshing ? 'animate-spin' : ''}`} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats Dashboard */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-white font-mono">{stats.total}</p>
+                    <p className="text-xs text-white/40 font-mono">Stories</p>
+                </div>
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-fairy-yellow font-mono">{stats.avgScore}</p>
+                    <p className="text-xs text-white/40 font-mono">Avg Score</p>
+                </div>
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-fairy-teal font-mono">{stats.totalComments}</p>
+                    <p className="text-xs text-white/40 font-mono">Comments</p>
+                </div>
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-primary font-mono">{stats.saved}</p>
+                    <p className="text-xs text-white/40 font-mono">Saved</p>
+                </div>
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-fairy-purple font-mono">{stats.read}</p>
+                    <p className="text-xs text-white/40 font-mono">Read</p>
+                </div>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="glass-panel rounded-xl p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                    {/* Search */}
+                    <div className="flex-1 relative">
+                        <input
+                            type="text"
+                            placeholder="Search stories..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full glass-panel rounded-lg px-4 py-2 pl-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm"
+                        />
+                        <svg className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+
+                    {/* Filter Buttons */}
+                    <div className="flex gap-2 flex-wrap">
+                        {(['all', 'show', 'ask', 'jobs', 'saved'] as FilterOption[]).map((filter) => (
+                            <button
+                                key={filter}
+                                onClick={() => setFilterBy(filter)}
+                                className={`px-3 py-2 rounded-lg font-mono text-xs transition-all ${
+                                    filterBy === filter
+                                        ? 'bg-primary/20 text-primary'
+                                        : 'glass-panel text-white/60 hover:text-white'
+                                }`}
+                            >
+                                {filter === 'all' && '📰 All'}
+                                {filter === 'show' && '🚀 Show'}
+                                {filter === 'ask' && '❓ Ask'}
+                                {filter === 'jobs' && '💼 Jobs'}
+                                {filter === 'saved' && `⭐ Saved (${stats.saved})`}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Sort */}
+                    <div className="flex gap-2">
+                        {(['score', 'time', 'comments'] as SortOption[]).map((sort) => (
+                            <button
+                                key={sort}
+                                onClick={() => setSortBy(sort)}
+                                className={`px-3 py-2 rounded-lg font-mono text-xs transition-all ${
+                                    sortBy === sort
+                                        ? 'bg-fairy-teal/20 text-fairy-teal'
+                                        : 'glass-panel text-white/60 hover:text-white'
+                                }`}
+                            >
+                                {sort === 'score' && '▲ Score'}
+                                {sort === 'time' && '🕐 New'}
+                                {sort === 'comments' && '💬 Comments'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Stories List */}
+            <div className="space-y-3">
+                {filteredStories.length === 0 ? (
+                    <div className="glass-panel rounded-xl p-8 text-center">
+                        <p className="text-white/40 font-mono">No stories found</p>
+                    </div>
+                ) : (
+                    filteredStories.map((story, index) => {
+                        const storyType = getStoryType(story.title);
+                        const isRead = readStories.includes(story.id);
+                        const isSaved = savedStories.includes(story.id);
+
+                        return (
+                            <a
+                                key={story.id}
+                                href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => markAsRead(story.id)}
+                                className={`block glass-panel rounded-xl p-4 hover:bg-white/5 transition-all group border border-transparent hover:border-primary/20 ${
+                                    isRead ? 'opacity-60' : ''
+                                }`}
+                            >
+                                <div className="flex gap-4">
+                                    {/* Rank */}
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <span className="text-primary font-mono font-bold text-sm">{index + 1}</span>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start gap-2 mb-2">
+                                            {storyType && (
+                                                <span className={`text-xs font-mono ${storyType.color} whitespace-nowrap`}>
+                                                    {storyType.badge}
+                                                </span>
+                                            )}
+                                            {isRead && (
+                                                <span className="text-xs font-mono text-white/30">✓ Read</span>
+                                            )}
+                                        </div>
+                                        <h4 className={`font-mono text-sm leading-relaxed mb-2 group-hover:text-primary transition-colors line-clamp-2 ${
+                                            isRead ? 'text-white/60' : 'text-white'
+                                        }`}>
+                                            {story.title}
+                                            <ExternalLink className="w-3 h-3 inline-block ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </h4>
+
+                                        <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+                                            <span className="text-fairy-yellow">▲ {story.score}</span>
+                                            <span className="text-white/40">by {story.by}</span>
+                                            <span className="text-white/40">{formatTimeAgo(story.time)}</span>
+                                            <a
+                                                href={`https://news.ycombinator.com/item?id=${story.id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="text-white/40 hover:text-primary transition-colors"
+                                            >
+                                                💬 {story.descendants || 0}
+                                            </a>
+                                            <span className="text-primary/60 truncate max-w-[150px]">{getDomain(story.url)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Save Button */}
+                                    <button
+                                        onClick={(e) => toggleSave(e, story.id)}
+                                        className={`flex-shrink-0 p-2 rounded-lg transition-all ${
+                                            isSaved
+                                                ? 'bg-primary/20 text-primary'
+                                                : 'text-white/30 hover:text-primary hover:bg-primary/10'
+                                        }`}
+                                    >
+                                        {isSaved ? '⭐' : '☆'}
+                                    </button>
+                                </div>
+                            </a>
+                        );
+                    })
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="glass-panel rounded-xl p-4 border-white/5">
+                <div className="flex justify-between items-center">
+                    <p className="text-white/40 text-xs font-mono">
+                        Showing {filteredStories.length} of {stories.length} stories
+                    </p>
+                    <a
+                        href="https://news.ycombinator.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary text-xs font-mono hover:underline flex items-center gap-1"
+                    >
+                        Visit HN <ExternalLink className="w-3 h-3" />
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default Tools;
