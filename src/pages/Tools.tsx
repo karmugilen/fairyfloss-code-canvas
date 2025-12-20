@@ -107,7 +107,7 @@ const Tools = () => {
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 glass-panel p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-6 glass-panel p-1 rounded-lg mb-8">
                         <TabsTrigger
                             value="location"
                             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
@@ -121,6 +121,13 @@ const Tools = () => {
                         >
                             <Calculator className="w-4 h-4 mr-1" />
                             Cost
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="time"
+                            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all duration-300 font-mono text-xs"
+                        >
+                            <Timer className="w-4 h-4 mr-1" />
+                            Time
                         </TabsTrigger>
                         <TabsTrigger
                             value="todo"
@@ -151,6 +158,10 @@ const Tools = () => {
 
                     <TabsContent value="calculator">
                         <CostCalculator />
+                    </TabsContent>
+
+                    <TabsContent value="time">
+                        <TimeCalculator />
                     </TabsContent>
 
                     <TabsContent value="todo">
@@ -1370,6 +1381,933 @@ const TodoList = () => {
                         ))
                     )}
                 </div>
+            </div>
+        </div>
+    );
+};
+
+
+// Time Calculator Component for Project Management
+const TimeCalculator = () => {
+    // Deadline Calculator State
+    const [deadlineDate, setDeadlineDate] = useState<string>('');
+    const [deadlineTime, setDeadlineTime] = useState<string>('');
+    const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+    const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
+
+    // Work Session Timer State
+    const [sessionSeconds, setSessionSeconds] = useState(0);
+    const [isSessionRunning, setIsSessionRunning] = useState(false);
+    const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+
+    // Time Estimation State
+    const [estimatedHours, setEstimatedHours] = useState<string>('');
+    const [estimatedMinutes, setEstimatedMinutes] = useState<string>('');
+    const [completionTime, setCompletionTime] = useState<string>('');
+
+    // Break Reminder State
+    const [showBreakReminder, setShowBreakReminder] = useState(false);
+    const [breakType, setBreakType] = useState<'pomodoro' | 'long'>('pomodoro');
+
+    // Update deadline countdown
+    useEffect(() => {
+        if (!deadlineDate) {
+            setCountdown(null);
+            return;
+        }
+
+        const calculateCountdown = () => {
+            const deadline = new Date(`${deadlineDate}T${deadlineTime || '23:59'}`);
+            const now = new Date();
+            const diff = deadline.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setIsDeadlinePassed(true);
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                return;
+            }
+
+            setIsDeadlinePassed(false);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            setCountdown({ days, hours, minutes, seconds });
+        };
+
+        calculateCountdown();
+        const interval = setInterval(calculateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, [deadlineDate, deadlineTime]);
+
+    // Work session timer
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isSessionRunning) {
+            interval = setInterval(() => {
+                setSessionSeconds(prev => {
+                    const newSeconds = prev + 1;
+                    // Check for break reminders
+                    if (newSeconds === 25 * 60) {
+                        setShowBreakReminder(true);
+                        setBreakType('pomodoro');
+                    } else if (newSeconds === 50 * 60) {
+                        setShowBreakReminder(true);
+                        setBreakType('long');
+                    }
+                    return newSeconds;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isSessionRunning]);
+
+    // Calculate completion time when estimation changes
+    useEffect(() => {
+        const hours = parseFloat(estimatedHours) || 0;
+        const minutes = parseFloat(estimatedMinutes) || 0;
+        const totalMinutes = hours * 60 + minutes;
+
+        if (totalMinutes > 0) {
+            const now = new Date();
+            const endTime = new Date(now.getTime() + totalMinutes * 60 * 1000);
+            setCompletionTime(endTime.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            }) + ' on ' + endTime.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            }));
+        } else {
+            setCompletionTime('');
+        }
+    }, [estimatedHours, estimatedMinutes]);
+
+    const formatSessionTime = (seconds: number) => {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const toggleSession = () => {
+        if (!isSessionRunning) {
+            setSessionStartTime(new Date());
+        }
+        setIsSessionRunning(!isSessionRunning);
+    };
+
+    const resetSession = () => {
+        setIsSessionRunning(false);
+        setSessionSeconds(0);
+        setSessionStartTime(null);
+        setShowBreakReminder(false);
+    };
+
+    const dismissBreakReminder = () => {
+        setShowBreakReminder(false);
+    };
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            {/* Header */}
+            <div className="glass-panel rounded-xl p-8">
+                <div className="code-block mb-6">
+                    <div className="text-white/60">
+                        function <span className="text-fairy-teal">calculateTime</span>(deadline, estimation) {'{'}
+                    </div>
+                    <div className="pl-8 py-2">
+                        <div className="text-fairy-yellow">
+                            // Project time management & tracking
+                        </div>
+                        <div className="text-white/60">
+                            return {'{'}countdown, sessionTime, completionTime{'}'}
+                        </div>
+                    </div>
+                    <div className="text-white/60">{'}'}</div>
+                </div>
+
+                {/* Break Reminder Alert */}
+                {showBreakReminder && (
+                    <div className="glass-panel rounded-xl p-4 mb-6 border-2 border-fairy-yellow/50 bg-fairy-yellow/10 animate-pulse">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Clock className="w-6 h-6 text-fairy-yellow" />
+                                <div>
+                                    <p className="text-fairy-yellow font-mono font-bold">
+                                        {breakType === 'pomodoro' ? '🍅 Pomodoro Break!' : '☕ Long Break Time!'}
+                                    </p>
+                                    <p className="text-white/60 text-sm font-mono">
+                                        {breakType === 'pomodoro' 
+                                            ? "You've worked 25 minutes. Take a 5-minute break!" 
+                                            : "You've worked 50 minutes. Take a 10-minute break!"}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={dismissBreakReminder}
+                                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Main Grid */}
+                <div className="grid md:grid-cols-2 gap-6">
+                    {/* Deadline Calculator */}
+                    <div className="glass-panel rounded-xl p-6 border-primary/30">
+                        <h3 className="text-primary font-mono font-bold mb-4 text-lg flex items-center gap-2">
+                            <Calendar className="w-5 h-5" />
+                            DEADLINE_COUNTDOWN
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-white/80 text-xs font-mono mb-2 block">TARGET_DATE</label>
+                                <input
+                                    type="date"
+                                    value={deadlineDate}
+                                    onChange={(e) => setDeadlineDate(e.target.value)}
+                                    className="w-full glass-panel rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-white/80 text-xs font-mono mb-2 block">TARGET_TIME (optional)</label>
+                                <input
+                                    type="time"
+                                    value={deadlineTime}
+                                    onChange={(e) => setDeadlineTime(e.target.value)}
+                                    className="w-full glass-panel rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono"
+                                />
+                            </div>
+                            {countdown && (
+                                <div className={`glass-panel rounded-xl p-4 ${isDeadlinePassed ? 'border-destructive/50 bg-destructive/10' : 'border-fairy-teal/50'}`}>
+                                    {isDeadlinePassed ? (
+                                        <p className="text-destructive font-mono text-center font-bold">⚠️ DEADLINE_PASSED</p>
+                                    ) : (
+                                        <div className="grid grid-cols-4 gap-2 text-center">
+                                            <div>
+                                                <p className="text-2xl font-bold text-white font-mono">{countdown.days}</p>
+                                                <p className="text-xs text-white/40 font-mono">DAYS</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold text-white font-mono">{countdown.hours}</p>
+                                                <p className="text-xs text-white/40 font-mono">HRS</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold text-white font-mono">{countdown.minutes}</p>
+                                                <p className="text-xs text-white/40 font-mono">MIN</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold text-fairy-teal font-mono">{countdown.seconds}</p>
+                                                <p className="text-xs text-white/40 font-mono">SEC</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Work Session Timer */}
+                    <div className="glass-panel rounded-xl p-6 border-fairy-purple/30">
+                        <h3 className="text-fairy-purple font-mono font-bold mb-4 text-lg flex items-center gap-2">
+                            <Timer className="w-5 h-5" />
+                            WORK_SESSION
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="glass-panel rounded-xl p-6 text-center">
+                                <p className="text-4xl font-bold text-white font-mono tracking-wider">
+                                    {formatSessionTime(sessionSeconds)}
+                                </p>
+                                {sessionStartTime && (
+                                    <p className="text-white/40 text-xs font-mono mt-2">
+                                        Started at {sessionStartTime.toLocaleTimeString()}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={toggleSession}
+                                    className={`flex-1 py-3 rounded-lg font-mono text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                                        isSessionRunning 
+                                            ? 'bg-fairy-yellow/20 text-fairy-yellow hover:bg-fairy-yellow/30' 
+                                            : 'bg-fairy-teal/20 text-fairy-teal hover:bg-fairy-teal/30'
+                                    }`}
+                                >
+                                    {isSessionRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                    {isSessionRunning ? 'PAUSE' : 'START'}
+                                </button>
+                                <button
+                                    onClick={resetSession}
+                                    className="px-4 py-3 rounded-lg font-mono text-sm font-bold bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    RESET
+                                </button>
+                            </div>
+                            {/* Session Progress Indicators */}
+                            <div className="flex gap-2">
+                                <div className={`flex-1 h-2 rounded-full ${sessionSeconds >= 25 * 60 ? 'bg-fairy-teal' : 'bg-white/10'}`} title="25 min (Pomodoro)"></div>
+                                <div className={`flex-1 h-2 rounded-full ${sessionSeconds >= 50 * 60 ? 'bg-fairy-purple' : 'bg-white/10'}`} title="50 min"></div>
+                                <div className={`flex-1 h-2 rounded-full ${sessionSeconds >= 90 * 60 ? 'bg-primary' : 'bg-white/10'}`} title="90 min (Deep Work)"></div>
+                            </div>
+                            <p className="text-white/40 text-xs font-mono text-center">
+                                Progress: 25min → 50min → 90min (Deep Work)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Time Estimation Section */}
+                <div className="glass-panel rounded-xl p-6 mt-6 border-fairy-teal/30">
+                    <h3 className="text-fairy-teal font-mono font-bold mb-4 text-lg flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5" />
+                        TIME_ESTIMATION
+                    </h3>
+                    <p className="text-white/60 text-sm font-mono mb-4">
+                        // Enter estimated work duration to calculate completion time
+                    </p>
+                    <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-white/80 text-xs font-mono mb-2 block">HOURS</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value={estimatedHours}
+                                onChange={(e) => setEstimatedHours(e.target.value)}
+                                placeholder="0"
+                                className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fairy-teal transition-all font-mono"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-white/80 text-xs font-mono mb-2 block">MINUTES</label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="59"
+                                value={estimatedMinutes}
+                                onChange={(e) => setEstimatedMinutes(e.target.value)}
+                                placeholder="0"
+                                className="w-full glass-panel rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fairy-teal transition-all font-mono"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-white/80 text-xs font-mono mb-2 block">COMPLETION_TIME</label>
+                            <div className="glass-panel rounded-lg px-4 py-3 font-mono">
+                                {completionTime ? (
+                                    <span className="text-fairy-teal font-bold">{completionTime}</span>
+                                ) : (
+                                    <span className="text-white/40">Enter time above</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Quick Reference */}
+                <div className="glass-panel rounded-xl p-4 mt-6 border-white/5">
+                    <p className="text-fairy-yellow text-xs font-mono leading-relaxed">
+                        <span className="text-white/80">// TIPS:</span> Use the Pomodoro technique (25 min work, 5 min break) for focused sessions.
+                        <br />Deep work sessions of 90 minutes can boost productivity for complex tasks.
+                    </p>
+                </div>
+
+                {/* Daily Schedule Planner */}
+                <DailySchedulePlanner />
+            </div>
+        </div>
+    );
+};
+
+
+// Daily Schedule Planner Component
+interface ScheduleTask {
+    id: string;
+    name: string;
+    duration: number; // in hours
+    completed: boolean;
+    color: 'research' | 'code' | 'review' | 'other';
+    reminderTime?: string; // "14:30" format
+    reminderSent?: boolean;
+    startTime?: string; // "HH:MM"
+    endTime?: string;   // "HH:MM"
+}
+
+interface ScheduleSettings {
+    sleepStart: string; // "23:00"
+    sleepEnd: string;   // "07:00"
+    lunchStart: string;
+    lunchEnd: string;
+    dinnerStart: string;
+    dinnerEnd: string;
+}
+
+const DailySchedulePlanner = () => {
+    const [tasks, setTasks] = useState<ScheduleTask[]>([]);
+    const [newTaskName, setNewTaskName] = useState('');
+    const [newTaskDuration, setNewTaskDuration] = useState('1');
+    const [newTaskColor, setNewTaskColor] = useState<ScheduleTask['color']>('code');
+    const [newTaskReminder, setNewTaskReminder] = useState('');
+    const [newTaskStart, setNewTaskStart] = useState(''); // New state for start time
+    const [newTaskEnd, setNewTaskEnd] = useState('');     // New state for end time
+    const [showSettings, setShowSettings] = useState(false);
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+    const [settings, setSettings] = useState<ScheduleSettings>({
+        sleepStart: '23:00',
+        sleepEnd: '07:00',
+        lunchStart: '12:00',
+        lunchEnd: '13:00',
+        dinnerStart: '19:00',
+        dinnerEnd: '20:00'
+    });
+
+    // Check notification permission on mount
+    useEffect(() => {
+        if ('Notification' in window) {
+            setNotificationPermission(Notification.permission);
+        }
+    }, []);
+
+    // Request notification permission
+    const requestNotificationPermission = async () => {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            setNotificationPermission(permission);
+        }
+    };
+
+    // Send notification helper
+    const sendNotification = (title: string, body: string) => {
+        if (notificationPermission === 'granted') {
+            new Notification(title, {
+                body,
+                icon: '/favicon.ico',
+                tag: 'schedule-reminder'
+            });
+        }
+    };
+
+    // Check for reminders every minute
+    useEffect(() => {
+        const checkReminders = () => {
+            const now = new Date();
+            const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            tasks.forEach(task => {
+                if (task.reminderTime === currentTime && !task.reminderSent && !task.completed) {
+                    sendNotification(
+                        '⏰ Task Reminder',
+                        `Time to work on: ${task.name} (${task.duration}h)`
+                    );
+                    // Mark reminder as sent
+                    setTasks(prev => prev.map(t => 
+                        t.id === task.id ? { ...t, reminderSent: true } : t
+                    ));
+                }
+            });
+        };
+
+        checkReminders();
+        const interval = setInterval(checkReminders, 60000); // Check every minute
+        return () => clearInterval(interval);
+    }, [tasks, notificationPermission]);
+
+    // Load from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('daily-schedule');
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.tasks) setTasks(data.tasks);
+            if (data.settings) setSettings(data.settings);
+        }
+    }, []);
+
+    // Save to localStorage
+    useEffect(() => {
+        localStorage.setItem('daily-schedule', JSON.stringify({ tasks, settings }));
+    }, [tasks, settings]);
+
+    const colorMap = {
+        research: { bg: 'bg-fairy-purple/30', border: 'border-fairy-purple', text: 'text-fairy-purple', label: '📚 Research' },
+        code: { bg: 'bg-fairy-teal/30', border: 'border-fairy-teal', text: 'text-fairy-teal', label: '💻 Code' },
+        review: { bg: 'bg-fairy-blue/30', border: 'border-fairy-blue', text: 'text-fairy-blue', label: '🔍 Review' },
+        other: { bg: 'bg-white/10', border: 'border-white/30', text: 'text-white/80', label: '📌 Other' }
+    };
+
+    const timeToHour = (time: string): number => {
+        const [h, m] = time.split(':').map(Number);
+        return h + m / 60;
+    };
+
+    const addTask = () => {
+        if (!newTaskName.trim()) return;
+
+        let duration = 0;
+        let startTime = newTaskStart || undefined;
+        let endTime = newTaskEnd || undefined;
+
+        if (startTime && endTime) {
+            const startHour = timeToHour(startTime);
+            const endHour = timeToHour(endTime);
+            if (endHour > startHour) {
+                duration = endHour - startHour;
+            } else if (endHour < startHour) {
+                // Overnight task, calculate duration across midnight
+                duration = (24 - startHour) + endHour;
+            } else {
+                // Start and end times are the same, duration is 0
+                duration = 0;
+            }
+        } else if (newTaskDuration) {
+            duration = parseFloat(newTaskDuration);
+        } else {
+            duration = 1; // Default to 1 hour if no times and no duration
+        }
+
+        if (duration <= 0) {
+            alert("Task duration must be positive. Please set valid start/end times or duration.");
+            return;
+        }
+
+        const task: ScheduleTask = {
+            id: Date.now().toString(),
+            name: newTaskName.trim(),
+            duration: duration,
+            completed: false,
+            color: newTaskColor,
+            reminderTime: newTaskReminder || undefined,
+            reminderSent: false,
+            startTime: startTime,
+            endTime: endTime
+        };
+        setTasks([...tasks, task]);
+        setNewTaskName('');
+        setNewTaskDuration('1');
+        setNewTaskReminder('');
+        setNewTaskStart(''); // Reset new task start time
+        setNewTaskEnd('');   // Reset new task end time
+    };
+
+    const toggleTask = (id: string) => {
+        setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+    };
+
+    const deleteTask = (id: string) => {
+        setTasks(tasks.filter(t => t.id !== id));
+    };
+
+    const clearCompleted = () => {
+        setTasks(tasks.filter(t => !t.completed));
+    };
+
+    // Calculate available work hours
+    const calculateAvailableHours = (): number => {
+        const sleepHours = 8; // Fixed
+        const lunchHours = timeToHour(settings.lunchEnd) - timeToHour(settings.lunchStart);
+        const dinnerHours = timeToHour(settings.dinnerEnd) - timeToHour(settings.dinnerStart);
+        return 24 - sleepHours - lunchHours - dinnerHours;
+    };
+
+    const totalTaskHours = tasks.reduce((sum, t) => sum + t.duration, 0);
+    const availableHours = calculateAvailableHours();
+    const remainingHours = availableHours - totalTaskHours;
+
+    // Generate timeline blocks
+    const generateTimelineBlocks = () => {
+        const blocks: { start: number; end: number; type: 'sleep' | 'meal' | 'task' | 'free'; label: string; color?: string; taskColorClass?: string }[] = [];
+        
+        // Add fixed blocks first
+        const sleepStart = timeToHour(settings.sleepStart);
+        const sleepEnd = timeToHour(settings.sleepEnd);
+        
+        // Sleep block (handles overnight)
+        if (sleepStart > sleepEnd) {
+            blocks.push({ start: sleepStart, end: 24, type: 'sleep', label: '🌙 Sleep' });
+            blocks.push({ start: 0, end: sleepEnd, type: 'sleep', label: '🌙 Sleep' });
+        } else {
+            blocks.push({ start: sleepStart, end: sleepEnd, type: 'sleep', label: '🌙 Sleep' });
+        }
+        
+        // Meal blocks
+        blocks.push({ 
+            start: timeToHour(settings.lunchStart), 
+            end: timeToHour(settings.lunchEnd), 
+            type: 'meal', 
+            label: '🍽️ Lunch' 
+        });
+        blocks.push({ 
+            start: timeToHour(settings.dinnerStart), 
+            end: timeToHour(settings.dinnerEnd), 
+            type: 'meal', 
+            label: '🍽️ Dinner' 
+        });
+
+        // Add task blocks
+        tasks.forEach(task => {
+            if (task.startTime && task.endTime) {
+                const taskStart = timeToHour(task.startTime);
+                const taskEnd = timeToHour(task.endTime);
+                if (taskStart < taskEnd) {
+                    blocks.push({ 
+                        start: taskStart, 
+                        end: taskEnd, 
+                        type: 'task', 
+                        label: task.name, 
+                        taskColorClass: colorMap[task.color].bg 
+                    });
+                } else if (taskStart > taskEnd) {
+                    // Overnight task
+                    blocks.push({ 
+                        start: taskStart, 
+                        end: 24, 
+                        type: 'task', 
+                        label: task.name, 
+                        taskColorClass: colorMap[task.color].bg 
+                    });
+                    blocks.push({ 
+                        start: 0, 
+                        end: taskEnd, 
+                        type: 'task', 
+                        label: task.name, 
+                        taskColorClass: colorMap[task.color].bg 
+                    });
+                }
+            }
+        });
+
+        return blocks.sort((a, b) => a.start - b.start);
+    };
+
+    const timelineBlocks = generateTimelineBlocks();
+
+    // Generate hour labels
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    return (
+        <div className="glass-panel rounded-xl p-6 mt-6 border-fairy-purple/30">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-fairy-purple font-mono font-bold text-lg flex items-center gap-2">
+                    <Layers className="w-5 h-5" />
+                    DAILY_SCHEDULE
+                </h3>
+                <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                >
+                    <Settings className="w-5 h-5" />
+                </button>
+            </div>
+
+            {/* Settings Panel */}
+            {showSettings && (
+                <div className="glass-panel rounded-xl p-4 mb-6 border-white/10">
+                    <h4 className="text-white/80 font-mono text-sm mb-4">⚙️ SCHEDULE_SETTINGS</h4>
+                    <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-white/60 text-xs font-mono mb-1 block">🌙 Sleep (8hrs fixed)</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="time"
+                                    value={settings.sleepStart}
+                                    onChange={(e) => setSettings({ ...settings, sleepStart: e.target.value })}
+                                    className="flex-1 glass-panel rounded px-2 py-1 text-white font-mono text-sm"
+                                />
+                                <span className="text-white/40 self-center">→</span>
+                                <input
+                                    type="time"
+                                    value={settings.sleepEnd}
+                                    onChange={(e) => setSettings({ ...settings, sleepEnd: e.target.value })}
+                                    className="flex-1 glass-panel rounded px-2 py-1 text-white font-mono text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-white/60 text-xs font-mono mb-1 block">🍽️ Lunch</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="time"
+                                    value={settings.lunchStart}
+                                    onChange={(e) => setSettings({ ...settings, lunchStart: e.target.value })}
+                                    className="flex-1 glass-panel rounded px-2 py-1 text-white font-mono text-sm"
+                                />
+                                <span className="text-white/40 self-center">→</span>
+                                <input
+                                    type="time"
+                                    value={settings.lunchEnd}
+                                    onChange={(e) => setSettings({ ...settings, lunchEnd: e.target.value })}
+                                    className="flex-1 glass-panel rounded px-2 py-1 text-white font-mono text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-white/60 text-xs font-mono mb-1 block">🍽️ Dinner</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="time"
+                                    value={settings.dinnerStart}
+                                    onChange={(e) => setSettings({ ...settings, dinnerStart: e.target.value })}
+                                    className="flex-1 glass-panel rounded px-2 py-1 text-white font-mono text-sm"
+                                />
+                                <span className="text-white/40 self-center">→</span>
+                                <input
+                                    type="time"
+                                    value={settings.dinnerEnd}
+                                    onChange={(e) => setSettings({ ...settings, dinnerEnd: e.target.value })}
+                                    className="flex-1 glass-panel rounded px-2 py-1 text-white font-mono text-sm"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Notification Permission */}
+            {notificationPermission !== 'granted' && (
+                <div className="glass-panel rounded-xl p-4 mb-6 border-fairy-yellow/30 bg-fairy-yellow/5">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-fairy-yellow font-mono text-sm font-bold">🔔 Enable Reminders</p>
+                            <p className="text-white/60 text-xs font-mono">Get browser notifications for your scheduled tasks</p>
+                        </div>
+                        <button
+                            onClick={requestNotificationPermission}
+                            className="px-4 py-2 bg-fairy-yellow/20 text-fairy-yellow rounded-lg font-mono text-sm font-bold hover:bg-fairy-yellow/30 transition-all"
+                        >
+                            Enable
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Task Form */}
+            <div className="glass-panel rounded-xl p-4 mb-6 border-white/10">
+                <div className="flex flex-wrap gap-3 items-center">
+                    <input
+                        type="text"
+                        value={newTaskName}
+                        onChange={(e) => setNewTaskName(e.target.value)}
+                        placeholder="Task name..."
+                        className="flex-1 min-w-[150px] glass-panel rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fairy-teal transition-all font-mono text-sm"
+                        onKeyDown={(e) => e.key === 'Enter' && addTask()}
+                    />
+                    <div className="flex items-center gap-1">
+                        <span className="text-white/40 text-xs">Start:</span>
+                        <input
+                            type="time"
+                            value={newTaskStart}
+                            onChange={(e) => { setNewTaskStart(e.target.value); setNewTaskDuration(''); }}
+                            className="glass-panel rounded-lg px-2 py-2 text-white font-mono text-sm"
+                            title="Task start time"
+                        />
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className="text-white/40 text-xs">End:</span>
+                        <input
+                            type="time"
+                            value={newTaskEnd}
+                            onChange={(e) => { setNewTaskEnd(e.target.value); setNewTaskDuration(''); }}
+                            className="glass-panel rounded-lg px-2 py-2 text-white font-mono text-sm"
+                            title="Task end time"
+                        />
+                    </div>
+                    <span className="text-white/40 text-sm">or</span>
+                    <input
+                        type="number"
+                        value={newTaskDuration}
+                        onChange={(e) => { setNewTaskDuration(e.target.value); setNewTaskStart(''); setNewTaskEnd(''); }}
+                        min="0.5"
+                        max="12"
+                        step="0.5"
+                        className="w-20 glass-panel rounded-lg px-3 py-2 text-white font-mono text-sm text-center"
+                        placeholder="1"
+                    />
+                    <span className="text-white/40 text-sm self-center">hrs</span>
+                    <select
+                        value={newTaskColor}
+                        onChange={(e) => setNewTaskColor(e.target.value as ScheduleTask['color'])}
+                        className="glass-panel rounded-lg px-3 py-2 text-white font-mono text-sm bg-transparent"
+                    >
+                        <option value="code" className="bg-background">💻 Code</option>
+                        <option value="research" className="bg-background">📚 Research</option>
+                        <option value="review" className="bg-background">🔍 Review</option>
+                        <option value="other" className="bg-background">📌 Other</option>
+                    </select>
+                    <div className="flex items-center gap-1">
+                        <span className="text-white/40 text-xs">⏰</span>
+                        <input
+                            type="time"
+                            value={newTaskReminder}
+                            onChange={(e) => setNewTaskReminder(e.target.value)}
+                            className="glass-panel rounded-lg px-2 py-2 text-white font-mono text-sm"
+                            title="Set reminder time"
+                        />
+                    </div>
+                    <button
+                        onClick={addTask}
+                        className="px-4 py-2 bg-fairy-teal/20 text-fairy-teal rounded-lg font-mono text-sm font-bold hover:bg-fairy-teal/30 transition-all flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        ADD
+                    </button>
+                </div>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-fairy-teal font-mono">{availableHours.toFixed(1)}h</p>
+                    <p className="text-xs text-white/40 font-mono">Available</p>
+                </div>
+                <div className="glass-panel rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-fairy-purple font-mono">{totalTaskHours.toFixed(1)}h</p>
+                    <p className="text-xs text-white/40 font-mono">Scheduled</p>
+                </div>
+                <div className={`glass-panel rounded-xl p-4 text-center ${remainingHours < 0 ? 'border-destructive/50' : ''}`}>
+                    <p className={`text-2xl font-bold font-mono ${remainingHours < 0 ? 'text-destructive' : 'text-primary'}`}>
+                        {remainingHours.toFixed(1)}h
+                    </p>
+                    <p className="text-xs text-white/40 font-mono">{remainingHours < 0 ? 'Over!' : 'Free'}</p>
+                </div>
+            </div>
+
+            {/* Visual Timeline */}
+            <div className="glass-panel rounded-xl p-4 mb-6 border-white/10 overflow-x-auto">
+                <h4 className="text-white/60 font-mono text-xs mb-3">24-HOUR TIMELINE</h4>
+                <div className="relative min-w-[600px]">
+                    {/* Hour markers */}
+                    <div className="flex mb-1">
+                        {hours.map(h => (
+                            <div key={h} className="flex-1 text-center text-[10px] text-white/30 font-mono">
+                                {h.toString().padStart(2, '0')}
+                            </div>
+                        ))}
+                    </div>
+                    {/* Timeline bar */}
+                    <div className="relative h-10 bg-white/5 rounded-lg overflow-hidden">
+                        {/* Fixed blocks */}
+                        {timelineBlocks.map((block, i) => {
+                            const width = ((block.end - block.start) / 24) * 100;
+                            const left = (block.start / 24) * 100;
+                            let blockClass = '';
+                            if (block.type === 'sleep') {
+                                blockClass = 'bg-fairy-purple/40';
+                            } else if (block.type === 'meal') {
+                                blockClass = 'bg-fairy-yellow/40';
+                            } else if (block.type === 'task') {
+                                blockClass = block.taskColorClass || 'bg-white/20'; // Use task-specific color
+                            }
+                            return (
+                                <div
+                                    key={i}
+                                    className={`absolute top-0 h-full flex items-center justify-center text-xs font-mono ${blockClass}`}
+                                    style={{ left: `${left}%`, width: `${width}%` }}
+                                    title={`${block.label} (${block.start.toFixed(0).padStart(2, '0')}:00 - ${block.end.toFixed(0).padStart(2, '0')}:00)`}
+                                >
+                                    <span className="truncate px-1 text-[10px]">{block.label}</span>
+                                </div>
+                            );
+                        })}
+                        {/* Current time indicator */}
+                        {(() => {
+                            const now = new Date();
+                            const currentHour = now.getHours() + now.getMinutes() / 60;
+                            const left = (currentHour / 24) * 100;
+                            return (
+                                <div
+                                    className="absolute top-0 w-0.5 h-full bg-destructive z-10"
+                                    style={{ left: `${left}%` }}
+                                    title={`Now: ${now.toLocaleTimeString()}`}
+                                />
+                            );
+                        })()}
+                    </div>
+                </div>
+            </div>
+
+            {/* Task List */}
+            <div className="space-y-2">
+                {tasks.length === 0 ? (
+                    <p className="text-white/40 text-sm font-mono text-center py-4">
+                        No tasks yet. Add tasks above to plan your day!
+                    </p>
+                ) : (
+                    <>
+                        {tasks.map((task) => (
+                            <div
+                                key={task.id}
+                                className={`glass-panel rounded-lg p-3 flex items-center gap-3 ${
+                                    task.completed ? 'opacity-50' : ''
+                                } ${colorMap[task.color].bg} border ${colorMap[task.color].border}`}
+                            >
+                                <button
+                                    onClick={() => toggleTask(task.id)}
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                                        task.completed 
+                                            ? 'bg-fairy-teal border-fairy-teal' 
+                                            : 'border-white/30 hover:border-fairy-teal'
+                                    }`}
+                                >
+                                    {task.completed && <Check className="w-4 h-4 text-white" />}
+                                </button>
+                                <div className="flex-1">
+                                    <p className={`font-mono text-sm ${task.completed ? 'line-through text-white/40' : 'text-white'}`}>
+                                        {task.name}
+                                    </p>
+                                    {(task.reminderTime || (task.startTime && task.endTime)) && (
+                                        <p className="text-white/40 text-xs font-mono flex items-center gap-1">
+                                            {task.startTime && task.endTime && (
+                                                <span>{task.startTime} - {task.endTime}</span>
+                                            )}
+                                            {task.reminderTime && (
+                                                <>
+                                                    {task.startTime && task.endTime && <span className="mx-1">|</span>}
+                                                    ⏰ {task.reminderTime}
+                                                </>
+                                            )}
+                                            {task.reminderSent && <span className="text-fairy-teal">✓</span>}
+                                        </p>
+                                    )}
+                                </div>
+                                <span className={`text-xs font-mono ${colorMap[task.color].text}`}>
+                                    {task.duration.toFixed(1)}h
+                                </span>
+                                <button
+                                    onClick={() => deleteTask(task.id)}
+                                    className="p-1 text-white/30 hover:text-destructive transition-all"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                        {tasks.some(t => t.completed) && (
+                            <button
+                                onClick={clearCompleted}
+                                className="w-full py-2 text-white/40 hover:text-white text-xs font-mono hover:bg-white/5 rounded-lg transition-all"
+                            >
+                                Clear completed tasks
+                            </button>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-white/10">
+                <span className="text-white/40 text-xs font-mono">Legend:</span>
+                <span className="text-xs font-mono flex items-center gap-1">
+                    <span className="w-3 h-3 bg-fairy-purple/40 rounded"></span> Sleep
+                </span>
+                <span className="text-xs font-mono flex items-center gap-1">
+                    <span className="w-3 h-3 bg-fairy-yellow/40 rounded"></span> Meals
+                </span>
+                <span className="text-xs font-mono flex items-center gap-1">
+                    <span className="w-3 h-3 bg-destructive rounded"></span> Now
+                </span>
             </div>
         </div>
     );
